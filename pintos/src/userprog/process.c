@@ -43,10 +43,9 @@ process_execute (const char *file_name)
 
   // Initialize a counter to keep track argument #
   int i = 0;
+  // Iterate 'token' with delimiter ' '
   for (token = strtok_r (fn_copy, " ", &save_ptr); token != NULL;
         token = strtok_r (NULL, " ", &save_ptr)){
-    // Iterate 'token' with delimiter ' '
-    printf ("!! '%s'\n", token);
     // Have the the i'th argument point to pointer 
     fname_args[i] = token;
     i +=1;   // increment i

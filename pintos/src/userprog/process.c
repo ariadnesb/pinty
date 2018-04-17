@@ -32,34 +32,29 @@ process_execute (const char *file_name)
   char *fn_copy, *token, *save_ptr;
   tid_t tid;
 
-  // file_name = strtok_r(file_name, " ", &save_ptr);
-  /*Parse arguments*/
-
-  // char s[] = "  String to  tokenize. ";
-
-  /* Make a copy of FILE_NAME.
-     Otherwise there'sstrlcpy a race between the caller and load(). */
   fn_copy = palloc_get_page (0);
   if (fn_copy == NULL)
-    return TID_ERROR;
-
+    return TID_ERROR; // palloc problem
 
   strlcpy (fn_copy, file_name, strlen(file_name)+1);
+  // TO DO! Determine how many arguments are in the file_name
+  // and malloc accordingly! 10 is a place holder!!
+  char **fname_args = (char**) malloc(10*sizeof(char*));
 
-  char **t = (char**) malloc(10*sizeof(char*));
-  // char *t = malloc(sizeof(file_name)+1);
+  // Initialize a counter to keep track argument #
   int i = 0;
   for (token = strtok_r (fn_copy, " ", &save_ptr); token != NULL;
         token = strtok_r (NULL, " ", &save_ptr)){
+    // Iterate 'token' with delimiter ' '
     printf ("!! '%s'\n", token);
-    t[i] = token;
-    //*t[i]= token;
-    i +=1; 
+    // Have the the i'th argument point to pointer 
+    fname_args[i] = token;
+    i +=1;   // increment i
   }
 
 
   /* Create a new thread to execute FILE_NAME. */
-  tid = thread_create (file_name, PRI_DEFAULT, start_process, t );
+  tid = thread_create (file_name, PRI_DEFAULT, start_process, fname_args );
   if (tid == TID_ERROR)
     palloc_free_page (fn_copy); 
   return tid;

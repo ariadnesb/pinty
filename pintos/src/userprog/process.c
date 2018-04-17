@@ -28,8 +28,11 @@ static bool load (const char *cmdline, void (**eip) (void), void **esp);
 tid_t
 process_execute (const char *file_name) 
 {
-  char *fn_copy;
+  char *fn_copy, *token, *save_ptr;
   tid_t tid;
+
+  file_name = strtok_r(file_name, " ", &save_ptr);
+  /*Parse arguments*/
 
   /* Make a copy of FILE_NAME.
      Otherwise there's a race between the caller and load(). */

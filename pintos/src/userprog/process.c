@@ -17,6 +17,7 @@
 #include "threads/palloc.h"
 #include "threads/thread.h"
 #include "threads/vaddr.h"
+#include <stdlib.h>
 
 static thread_func start_process NO_RETURN;
 static bool load (const char *cmdline, void (**eip) (void), void **esp);
@@ -31,6 +32,7 @@ process_execute (const char *file_name)
   char *fn_copy, *token, *save_ptr;
   tid_t tid;
 
+<<<<<<< HEAD
   printf("%s", "Program runs\n");
 
   /*for (token = strtok_r (s, " ", &save_ptr); token != NULL;
@@ -45,13 +47,30 @@ process_execute (const char *file_name)
 
   /* Make a copy of FILE_NAME.
      Otherwise there's a race between the caller and load(). */
+=======
+>>>>>>> ba529eec6e5950b7d7ad41d16c32224416a7b88f
   fn_copy = palloc_get_page (0);
   if (fn_copy == NULL)
-    return TID_ERROR;
-  strlcpy (fn_copy, file_name, PGSIZE);
+    return TID_ERROR; // palloc problem
+
+  strlcpy (fn_copy, file_name, strlen(file_name)+1);
+  // TO DO! Determine how many arguments are in the file_name
+  // and malloc accordingly! 10 is a place holder!!
+  char **fname_args = (char**) malloc(10*sizeof(char*));
+
+  // Initialize a counter to keep track argument #
+  int i = 0;
+  // Iterate 'token' with delimiter ' '
+  for (token = strtok_r (fn_copy, " ", &save_ptr); token != NULL;
+        token = strtok_r (NULL, " ", &save_ptr)){
+    // Have the the i'th argument point to pointer 
+    fname_args[i] = token;
+    i +=1;   // increment i
+  }
+
 
   /* Create a new thread to execute FILE_NAME. */
-  tid = thread_create (file_name, PRI_DEFAULT, start_process, fn_copy);
+  tid = thread_create (file_name, PRI_DEFAULT, start_process, fname_args );
   if (tid == TID_ERROR)
     palloc_free_page (fn_copy); 
   return tid;

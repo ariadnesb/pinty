@@ -31,7 +31,16 @@ process_execute (const char *file_name)
   char *fn_copy, *token, *save_ptr;
   tid_t tid;
 
-  file_name = strtok_r(file_name, " ", &save_ptr);
+  printf("%s", "Program runs\n");
+
+  /*for (token = strtok_r (s, " ", &save_ptr); token != NULL;
+        token = strtok_r (NULL, " ", &save_ptr)){
+     printf ("'%s'\n", token);
+
+ }*/
+
+
+  
   /*Parse arguments*/
 
   /* Make a copy of FILE_NAME.
@@ -85,7 +94,6 @@ start_process (void *file_name_)
    child of the calling process, or if process_wait() has already
    been successfully called for the given TID, returns -1
    immediately, without waiting.
-
    This function will be implemented in problem 2-2.  For now, it
    does nothing. */
 int
@@ -371,15 +379,11 @@ validate_segment (const struct Elf32_Phdr *phdr, struct file *file)
 /* Loads a segment starting at offset OFS in FILE at address
    UPAGE.  In total, READ_BYTES + ZERO_BYTES bytes of virtual
    memory are initialized, as follows:
-
         - READ_BYTES bytes at UPAGE must be read from FILE
           starting at offset OFS.
-
         - ZERO_BYTES bytes at UPAGE + READ_BYTES must be zeroed.
-
    The pages initialized by this function must be writable by the
    user process if WRITABLE is true, read-only otherwise.
-
    Return true if successful, false if a memory allocation error
    or disk read error occurs. */
 static bool

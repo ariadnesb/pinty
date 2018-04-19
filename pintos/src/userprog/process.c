@@ -21,6 +21,9 @@
 
 static thread_func start_process NO_RETURN;
 static bool load (const char *cmdline, void (**eip) (void), void **esp);
+int argcount = 0;
+char **fname_args;
+
 
 /* Starts a new thread running a user program loaded from
    FILENAME.  The new thread may be scheduled (and may even exit)
@@ -29,9 +32,10 @@ static bool load (const char *cmdline, void (**eip) (void), void **esp);
 tid_t
 process_execute (const char *file_name) 
 {
-  char *fn_copy, *token, *save_ptr;
+  char *fn_copy, *save_ptr;
   tid_t tid;
-   char *token, *save_ptr;
+  char *token;
+fname_args  = (char**) malloc(10*sizeof(char*));
 
   fn_copy = palloc_get_page (0);
   if (fn_copy == NULL)
@@ -40,16 +44,16 @@ process_execute (const char *file_name)
   strlcpy (fn_copy, file_name, strlen(file_name)+1);
   // TO DO! Determine how many arguments are in the file_name
   // and malloc accordingly! 10 is a place holder!!
-  char **fname_args = (char**) malloc(10*sizeof(char*));
+ 
 
   // Initialize a counter to keep track argument #
-  int i = 0;
+  
   // Iterate 'token' with delimiter ' '
   for (token = strtok_r (fn_copy, " ", &save_ptr); token != NULL;
         token = strtok_r (NULL, " ", &save_ptr)){
     // Have the the i'th argument point to pointer 
-    fname_args[i] = token;
-    i +=1;   // increment i
+    fname_args[argcount] = token; //should we string copy here instead or does this work?
+    argcount +=1;   // increment i
   }
 
 
@@ -450,16 +454,43 @@ setup_stack (void **esp)
 {
   uint8_t *kpage;
   bool success = false;
+  void *offset = PHYS_BASE;
+  int plen = sizeof(void *);
+  char *fname = fname_args[0];
 
   kpage = palloc_get_page (PAL_USER | PAL_ZERO);
   if (kpage != NULL) 
     {
       success = install_page (((uint8_t *) PHYS_BASE) - PGSIZE, kpage, true);
-      if (success)
+      if (success) {
         *esp = PHYS_BASE;
-      else
+      }
+      for(int i = argcount-1; i>=0; i--){
+        *esp -= (strlen(fname_args[i] +1));
+        strlcpy(*esp, fname_args[i], strlen(fname_args[i]) + 1);
+      }
+      *esp -=(strlen(fname) +1);
+      strlcpy(*esp, fname, strlen(fname) +1);
+
+      while ((unsigned int) (*esp) % plen != 0){
+        *esp -= 1;
+        *(uint8_t*)*esp = 0x00;
+      }
+      *esp -= plen;
+      *(uint32_t*)*esp =(uint32_t)0;
+
+      for(int i = argcount-1;  i>=0; i--){
+        offset -= strlen(fname_args[i]) +1;
+        *esp= *esp -plen;
+        *(int *) *esp = (int*) offset;
+      }
+      hex_dump(*esp, *esp, (int) (PHYS_BASE - *esp), true);
+      
+      }
+      else {
         palloc_free_page (kpage);
-    }
+      }
+    
   return success;
 }
 

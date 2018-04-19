@@ -41,7 +41,7 @@ fname_args  = (char**) malloc(10*sizeof(char*));
   if (fn_copy == NULL)
     return TID_ERROR; // palloc problem
 
-  strlcpy (fn_copy, file_name, strlen(file_name)+1);
+  strlcpy (fn_copy, file_name,PGSIZE);
   // TO DO! Determine how many arguments are in the file_name
   // and malloc accordingly! 10 is a place holder!!
  
@@ -52,17 +52,14 @@ fname_args  = (char**) malloc(10*sizeof(char*));
   for (token = strtok_r (fn_copy, " ", &save_ptr); token != NULL;
         token = strtok_r (NULL, " ", &save_ptr)){
     // Have the the i'th argument point to pointer 
-    fname_args[argcount] = token; //should we string copy here instead or does this work?
+    fname_args[argcount]= malloc(strlen(token) +1);
+    strlcpy(fname_args[argcount], token, strlen(token) +1); //should we string copy here instead or does this work?
     argcount +=1;   // increment i
   }
 
 
- for (token = strtok_r (fn_copy, " ", &save_ptr); token != NULL;
-        token = strtok_r (NULL, " ", &save_ptr))
-     printf ("'%s'\n", token);
-
   /* Create a new thread to execute FILE_NAME. */
-  tid = thread_create (file_name, PRI_DEFAULT, start_process, fname_args );
+  tid = thread_create (fn_copy, PRI_DEFAULT, start_process, fn_copy );
   if (tid == TID_ERROR)
     palloc_free_page (fn_copy); 
   return tid;
@@ -111,6 +108,9 @@ start_process (void *file_name_)
 int
 process_wait (tid_t child_tid UNUSED) 
 {
+  while (1){
+    
+  }
   return -1;
 }
 
@@ -237,20 +237,23 @@ load (const char *file_name, void (**eip) (void), void **esp)
   off_t file_ofs;
   bool success = false;
   int i;
+      printf("start loap\n");
 
   /* Allocate and activate page directory. */
   t->pagedir = pagedir_create ();
   if (t->pagedir == NULL) 
     goto done;
   process_activate ();
-
+  printf(".5;%s\n", file_name);
   /* Open executable file. */
   file = filesys_open (file_name);
+  printf(".6\n");
   if (file == NULL) 
     {
       printf ("load: %s: open failed\n", file_name);
       goto done; 
     }
+      printf("1\n");
 
   /* Read and verify executable header. */
   if (file_read (file, &ehdr, sizeof ehdr) != sizeof ehdr
@@ -264,6 +267,7 @@ load (const char *file_name, void (**eip) (void), void **esp)
       printf ("load: %s: error loading executable\n", file_name);
       goto done; 
     }
+      printf("2\n");
 
   /* Read program headers. */
   file_ofs = ehdr.e_phoff;
@@ -278,6 +282,8 @@ load (const char *file_name, void (**eip) (void), void **esp)
       if (file_read (file, &phdr, sizeof phdr) != sizeof phdr)
         goto done;
       file_ofs += sizeof phdr;
+            printf("3\n");
+
       switch (phdr.p_type) 
         {
         case PT_NULL:
@@ -294,6 +300,8 @@ load (const char *file_name, void (**eip) (void), void **esp)
         case PT_LOAD:
           if (validate_segment (&phdr, file)) 
             {
+                    printf("4\n");
+
               bool writable = (phdr.p_flags & PF_W) != 0;
               uint32_t file_page = phdr.p_offset & ~PGMASK;
               uint32_t mem_page = phdr.p_vaddr & ~PGMASK;
@@ -323,6 +331,7 @@ load (const char *file_name, void (**eip) (void), void **esp)
           break;
         }
     }
+        printf("before call setup_stack\n");
 
   /* Set up stack. */
   if (!setup_stack (esp))
@@ -457,6 +466,7 @@ setup_stack (void **esp)
   void *offset = PHYS_BASE;
   int plen = sizeof(void *);
   char *fname = fname_args[0];
+        printf("start of setup stack\n");
 
   kpage = palloc_get_page (PAL_USER | PAL_ZERO);
   if (kpage != NULL) 
@@ -484,6 +494,7 @@ setup_stack (void **esp)
         *esp= *esp -plen;
         *(int *) *esp = (int*) offset;
       }
+      printf("before hex dump\n");
       hex_dump(*esp, *esp, (int) (PHYS_BASE - *esp), true);
       
       }

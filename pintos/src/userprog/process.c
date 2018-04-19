@@ -109,7 +109,7 @@ int
 process_wait (tid_t child_tid UNUSED) 
 {
   while (1){
-    
+
   }
   return -1;
 }
@@ -476,11 +476,11 @@ setup_stack (void **esp)
         *esp = PHYS_BASE;
       }
       for(int i = argcount-1; i>=0; i--){
-        *esp -= (strlen(fname_args[i] +1));
+        *esp -= (strlen(fname_args[i]) +1);
         strlcpy(*esp, fname_args[i], strlen(fname_args[i]) + 1);
       }
-      *esp -=(strlen(fname) +1);
-      strlcpy(*esp, fname, strlen(fname) +1);
+      //*esp -=(strlen(fname) +1);
+      //strlcpy(*esp, fname, strlen(fname) +1);
 
       while ((unsigned int) (*esp) % plen != 0){
         *esp -= 1;

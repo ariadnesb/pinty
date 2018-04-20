@@ -15,10 +15,12 @@ syscall_init (void)
 static void
 syscall_handler (struct intr_frame *f UNUSED) 
 {
-	int call = *(* int) f-> esp;
+	int call = *(int *) f-> esp;
+	printf("system call numero %d!\n", call);
 
 	switch(call){
-		case  SYS_HALT:                   /* Halt the operating system. */
+		case SYS_HALT:                   /* Halt the operating system. */
+
     	case SYS_EXIT:                  /* Terminate this process. */
     	case SYS_EXEC:                   /* Start another process. */
     	case SYS_WAIT:                   /* Wait for a child process to die. */

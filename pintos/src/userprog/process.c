@@ -37,23 +37,23 @@ process_execute (const char *file_name)
   char *token;
 fname_args  = (char**) malloc(10*sizeof(char*));
 
-<<<<<<< HEAD
+/*<<<<<<< HEAD
   printf("%s", "Program runs\n");
 
-  /*for (token = strtok_r (s, " ", &save_ptr); token != NULL;
+  for (token = strtok_r (s, " ", &save_ptr); token != NULL;
         token = strtok_r (NULL, " ", &save_ptr)){
      printf ("'%s'\n", token);
 
- }*/
+ }
 
 
   
-  /*Parse arguments*/
+  Parse arguments
 
-  /* Make a copy of FILE_NAME.
-     Otherwise there's a race between the caller and load(). */
+  Make a copy of FILE_NAME.
+     Otherwise there's a race between the caller and load(). 
 =======
->>>>>>> ba529eec6e5950b7d7ad41d16c32224416a7b88f
+>>>>>>> ba529eec6e5950b7d7ad41d16c32224416a7b88f*/
   fn_copy = palloc_get_page (0);
   if (fn_copy == NULL)
     return TID_ERROR; // palloc problem

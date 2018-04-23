@@ -3,6 +3,8 @@
 #include <syscall-nr.h>
 #include "threads/interrupt.h"
 #include "threads/thread.h"
+#include "devices/shutdown.h"
+
 
 static void syscall_handler (struct intr_frame *);
 
@@ -20,8 +22,12 @@ syscall_handler (struct intr_frame *f UNUSED)
 
 	switch(call){
 		case SYS_HALT:                   /* Halt the operating system. */
+		{
+			shutdown_power_off();
+		}
 
     	case SYS_EXIT:                  /* Terminate this process. */
+
     	case SYS_EXEC:                   /* Start another process. */
     	case SYS_WAIT:                   /* Wait for a child process to die. */
    		case SYS_CREATE:                 /* Create a file. */

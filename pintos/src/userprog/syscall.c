@@ -15,19 +15,55 @@ syscall_init (void)
 static void
 syscall_handler (struct intr_frame *f UNUSED) 
 {
-  int call = *(int *)f->esp;
-  char** arguments;
-  void *esp_copy = f->esp;
-  switch(call){
-  	case(SYS_WRITE)
-  		for(int i = 0; i < 3; i++){
+
+	int call = *(int *) f-> esp;
+	printf("system call numero %d!\n", call);
+	char** arguments;
+    void *esp_copy = f->esp;
+  	
+  		    esp_copy++;
+  			//arguments[i] = *(int*)esp_copy;
+  			printf("%d\n", *(int *)esp_copy);
+  			printf("%d\n", &file_open(inode_open(esp_copy)).pos);
   			esp_copy++;
-  			arguments[i] = *(char*)esp_copy;
-  			printf("%s", *arguments[i]);
+
+  			printf("%s\n", *(char*)esp_copy);
+  			esp_copy++;
+  			printf("%d\n", *(int*)esp_copy);
+  			
   		
-  	}
-  }
-  printf ("system call!\n");
-  printf("%d", call);
-  thread_exit ();
+
+  
+  	 
+  
+
+	switch(call){
+		case SYS_HALT:                   /* Halt the operating system. */
+
+    	case SYS_EXIT:                  /* Terminate this process. */
+    	case SYS_EXEC:                   /* Start another process. */
+    	case SYS_WAIT:                   /* Wait for a child process to die. */
+   		case SYS_CREATE:                 /* Create a file. */
+    	case SYS_REMOVE:                 /* Delete a file. */
+    	case SYS_OPEN:                   /* Open a file. */
+    	case SYS_FILESIZE:               /* Obtain a file's size. */
+    	case SYS_READ:                   /* Read from a file. */
+    	case SYS_WRITE:
+    	printf("%s\n", "We have a write");                  /* Write to a file. */
+    	case SYS_SEEK:                   /* Change position in a file. */
+    	case SYS_TELL:                   /* Report current position in a file. */
+    	case SYS_CLOSE:                  /* Close a file. */
+
+    /* Project 3 and optionally project 4. */
+    	case SYS_MMAP:                   /* Map a file into memory. */
+    	case SYS_MUNMAP:                 /* Remove a memory mapping. */
+
+		default:
+			printf ("system call!\n");
+  			thread_exit ();
+
+
+
+	}
+
 }

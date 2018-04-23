@@ -24,7 +24,6 @@ syscall_handler (struct intr_frame *f UNUSED)
   		    esp_copy++;
   			//arguments[i] = *(int*)esp_copy;
   			printf("%d\n", *(int *)esp_copy);
-  			printf("%d\n", &file_open(inode_open(esp_copy)).pos);
   			esp_copy++;
 
   			printf("%s\n", *(char*)esp_copy);

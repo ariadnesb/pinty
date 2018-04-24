@@ -20,18 +20,9 @@ syscall_handler (struct intr_frame *f UNUSED)
 
 	int call = *(int *) f-> esp;
 	printf("system call numero %d!\n", call);
-	char** arguments;
-    void *esp_copy = f->esp;
-  	
-  		    esp_copy++;
-  			//arguments[i] = *(int*)esp_copy;
-  			printf("%d\n", *(int *)esp_copy);
-  			esp_copy++;
 
-  			printf("%s\n", *(char*)esp_copy);
-  			esp_copy++;
-  			printf("%d\n", *(int*)esp_copy);
-  			
+
+	
   		
 
   
@@ -54,7 +45,13 @@ syscall_handler (struct intr_frame *f UNUSED)
     	case SYS_FILESIZE:               /* Obtain a file's size. */
     	case SYS_READ:                   /* Read from a file. */
     	case SYS_WRITE:
-    	printf("%s\n", "We have a write");                  /* Write to a file. */
+    	printf("%s\n", "We have a write");  
+    	int fd = *((int*)f->esp + 1);
+    	void* buffer = (void *)*((int*)f->esp + 2);
+    	unsigned size = *((unsigned*)f->esp + 3);
+          
+
+    	               /* Write to a file. */
     	case SYS_SEEK:                   /* Change position in a file. */
     	case SYS_TELL:                   /* Report current position in a file. */
     	case SYS_CLOSE:                  /* Close a file. */

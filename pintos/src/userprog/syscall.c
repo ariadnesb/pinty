@@ -17,9 +17,17 @@ syscall_init (void)
 static void
 syscall_handler (struct intr_frame *f UNUSED) 
 {
-	int arg[6];
+
 	int call = *(int *) f-> esp;
 	printf("system call numero %d!\n", call);
+
+
+	
+  		
+
+  
+  	 
+  
 
 	switch(call){
 		case SYS_HALT:                   /* Halt the operating system. */
@@ -53,6 +61,14 @@ syscall_handler (struct intr_frame *f UNUSED)
 			
 			break;
       	}
+    	case SYS_WRITE:
+    	printf("%s\n", "We have a write");  
+    	int fd = *((int*)f->esp + 1);
+    	void* buffer = (void *)*((int*)f->esp + 2);
+    	unsigned size = *((unsigned*)f->esp + 3);
+          
+
+    	               /* Write to a file. */
     	case SYS_SEEK:                   /* Change position in a file. */
     	case SYS_TELL:                   /* Report current position in a file. */
     	case SYS_CLOSE:                  /* Close a file. */
@@ -69,16 +85,4 @@ syscall_handler (struct intr_frame *f UNUSED)
 
 	}
 
-  
-}
-void get_arg (struct intr_frame *f, int *arg, int n)
-{
-  int i;
-  int *ptr;
-  for (i = 0; i < n; i++)
-    {
-      ptr = (int *) f->esp + i + 1;
-      //check_valid_ptr((const void *) ptr);
-      arg[i] = *ptr;
-    }
 }

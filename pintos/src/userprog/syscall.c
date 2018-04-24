@@ -17,6 +17,7 @@ syscall_init (void)
 static void
 syscall_handler (struct intr_frame *f UNUSED) 
 {
+	int arg[6];
 	int call = *(int *) f-> esp;
 	printf("system call numero %d!\n", call);
 
@@ -27,7 +28,9 @@ syscall_handler (struct intr_frame *f UNUSED)
 		}
 
     	case SYS_EXIT:                  /* Terminate this process. */
-
+			{
+				thread_exit();
+			}
     	case SYS_EXEC:                   /* Start another process. */
     	case SYS_WAIT:                   /* Wait for a child process to die. */
    		case SYS_CREATE:                 /* Create a file. */
@@ -35,7 +38,21 @@ syscall_handler (struct intr_frame *f UNUSED)
     	case SYS_OPEN:                   /* Open a file. */
     	case SYS_FILESIZE:               /* Obtain a file's size. */
     	case SYS_READ:                   /* Read from a file. */
+    	{
+    		printf("hello there read... \n");
+    	}
     	case SYS_WRITE:                  /* Write to a file. */
+    	{
+    		printf("shouldn't this be fd= 1??: %d\n", f->esp +1);
+    		printf("writey\n");
+    		//get_arg(f, &arg[0], 3);
+			//check_valid_buffer((void *) arg[1], (unsigned) arg[2]);
+			//arg[1] = user_to_kernel_ptr((const void *) arg[1]);
+			//f->eax = write(arg[0], (const void *) arg[1],
+		    //(unsigned) arg[2]);
+			
+			break;
+      	}
     	case SYS_SEEK:                   /* Change position in a file. */
     	case SYS_TELL:                   /* Report current position in a file. */
     	case SYS_CLOSE:                  /* Close a file. */
@@ -53,4 +70,15 @@ syscall_handler (struct intr_frame *f UNUSED)
 	}
 
   
+}
+void get_arg (struct intr_frame *f, int *arg, int n)
+{
+  int i;
+  int *ptr;
+  for (i = 0; i < n; i++)
+    {
+      ptr = (int *) f->esp + i + 1;
+      //check_valid_ptr((const void *) ptr);
+      arg[i] = *ptr;
+    }
 }

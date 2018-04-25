@@ -48,8 +48,13 @@ syscall_handler (struct intr_frame *f UNUSED)
     	printf("%s\n", "We have a write");  
     	int fd = *((int*)f->esp + 1);
     	void* buffer = (void *)*((int*)f->esp + 2);
-    	unsigned size = *((unsigned*)f->esp + 3);
-          
+    	int size = *((int*)f->esp + 3);
+
+
+    	
+    	
+        
+
 
     	               /* Write to a file. */
     	case SYS_SEEK:                   /* Change position in a file. */
@@ -68,4 +73,14 @@ syscall_handler (struct intr_frame *f UNUSED)
 
 	}
 
+
+}
+
+int write(int fd, void* buffer, unsigned size){
+	if(fd == 1){
+    		putbuf(buffer, size);
+    	}
+    else{
+
+    }
 }

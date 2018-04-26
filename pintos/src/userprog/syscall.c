@@ -48,7 +48,9 @@ syscall_handler (struct intr_frame *f UNUSED)
     	printf("%s\n", "We have a write");  
     	int fd = *((int*)f->esp + 1);
     	void* buffer = (void *)*((int*)f->esp + 2);
-    	int size = *((int*)f->esp + 3);
+    	unsigned size = *((unsigned*)f->esp + 3);
+    	//printf("%d\n", size);
+    	f->eax = write(fd, buffer, size);
 
 
     	
@@ -83,4 +85,8 @@ int write(int fd, void* buffer, unsigned size){
     else{
 
     }
+
+bool check_ptr(void* ptr){
+	
+}
 }

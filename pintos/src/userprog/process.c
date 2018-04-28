@@ -491,7 +491,7 @@ setup_stack (void **esp)
         *esp -= (strlen(fname_args[i]) +1);
         strlcpy(*esp, fname_args[i], strlen(fname_args[i]) + 1);
       }
-      //*esp -=(strlen(fname) +1);
+     // *esp -=(strlen(fname) +1);
       //strlcpy(*esp, fname, strlen(fname) +1);
 
       while ((unsigned int) (*esp) % plen != 0){
@@ -499,20 +499,30 @@ setup_stack (void **esp)
         *(uint8_t*)*esp = 0x00;
       }
       *esp -= plen;
-      *(uint32_t*)*esp =(uint32_t)0;
+      *(int*)*esp =(uint32_t)0;
 
       for(int i = argcount-1;  i>=0; i--){
         offset -= strlen(fname_args[i]) +1;
         *esp= *esp -plen;
         *(int *) *esp = (int*) offset;
       }
+
+      *esp -= 4;
+      *((void**)(*esp)) = (*esp + 4);
+
+      *esp -= 4;
+      *((int *)*esp) = argcount;
+
+      *esp -= 4;
+      *((int *)*esp) = 0;
+
       printf("before hex dump\n");
-      hex_dump(*esp, *esp, (int) (PHYS_BASE - *esp), true);
-      
+      hex_dump((uintptr_t)*esp, *esp, (int) (PHYS_BASE - *esp), true);
       }
       else {
         palloc_free_page (kpage);
       }
+    
     
   return success;
 }

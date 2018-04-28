@@ -51,6 +51,7 @@ syscall_handler (struct intr_frame *f UNUSED)
     	unsigned size = *((unsigned*)f->esp + 3);
     	//printf("%d\n", size);
     	f->eax = write(fd, buffer, size);
+    	printf("\n");
 
 
     	

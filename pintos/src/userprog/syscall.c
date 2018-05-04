@@ -4,9 +4,18 @@
 #include "threads/interrupt.h"
 #include "threads/thread.h"
 #include "devices/shutdown.h"
+#include "threads/vaddr.h"
+#include "filesys/file.h"
+#include "filesys/inode.h"
+#include "threads/malloc.h"
+#include "threads/synch.h"
+#include "userprog/pagedir.h"
+#include "userprog/process.h"
 
+#define virt_bottom ((int *) 0x0804ba68)
 
 static void syscall_handler (struct intr_frame *);
+//void * arg[]
 
 void
 syscall_init (void) 
@@ -21,12 +30,12 @@ syscall_handler (struct intr_frame *f UNUSED)
 	int call = *(int *) f-> esp;
 	printf("system call numero %d!\n", call);
 
-
+	hex_dump(f->esp, f-> esp, (int) (PHYS_BASE - f->esp), true);
 	
-  		
+  		//make a copy of the stack pointer
 
   
-  	 
+  	 void* arg[5];
   
 
 	switch(call){
@@ -48,8 +57,8 @@ syscall_handler (struct intr_frame *f UNUSED)
     	case SYS_READ:                   /* Read from a file. */
     	{
     		printf("hello there read... \n");
-    	}
-    	case SYS_WRITE:                  /* Write to a file. */
+    	} /*
+    	case SYS_WRITE:                //  /* Write to a file. 
     	{
     		printf("shouldn't this be fd= 1??: %d\n", f->esp +1);
     		printf("writey\n");
@@ -60,14 +69,20 @@ syscall_handler (struct intr_frame *f UNUSED)
 		    //(unsigned) arg[2]);
 			
 			break;
-      	}
-    	case SYS_WRITE:
+      	} */
+    	case SYS_WRITE: 
+    	{
+    	get_arg(f, &arg[0], 3);
     	printf("%s\n", "We have a write");  
-    	int fd = *((int*)f->esp + 1);
-    	void* buffer = (void *)*((int*)f->esp + 2);
-    	unsigned size = *((unsigned*)f->esp + 3);
-          
-
+    	//int fd = *((int*)f->esp + 1);
+    	//void* buffer = (void *)*((char**)f->esp + 2);
+    	//unsigned size = *((unsigned*)f->esp + 3);
+    	//printf("%d , fd\n", fd);
+    	check_valid_buffer((void * ) arg[1], *(unsigned*) arg[2]);
+    	f->eax = write(*(int*)arg[0], *(char**) arg[1], *(unsigned *) arg[2]);
+        break;
+    	//printf("buff siz: %d\n", size);
+    }
     	               /* Write to a file. */
     	case SYS_SEEK:                   /* Change position in a file. */
     	case SYS_TELL:                   /* Report current position in a file. */
@@ -84,5 +99,45 @@ syscall_handler (struct intr_frame *f UNUSED)
 
 
 	}
+}
 
+void check_valid_buffer (void* buffer, unsigned size){
+	unsigned i;
+	char* local_buffer = (char *) buffer; 
+	for (i = 0 ; i<size; i++){
+		check_valid_ptr((const void *) local_buffer);
+		local_buffer++;
+	}
+}
+
+void check_valid_ptr (const void *vaddr){
+	if (!is_user_vaddr(vaddr) || vaddr < virt_bottom){
+		exit(ERROR);
+	}
+}
+
+
+	void get_arg (struct intr_frame *f, int *arg, int n)
+	{
+	  int i;
+	  int *ptr;
+	  int wlen = sizeof(void *);
+	  for (i = 0; i < n; i++)
+	    {
+	      //ptr = (int *) f->esp + ((i + 1) *wlen);
+	      //check_valid_ptr((const void *) ptr);
+	      //arg[i] = *ptr;
+	      arg[i] =  f->esp + ((i + 1) *wlen);
+	    }
+}
+
+	int write(int fd, void* buffer, unsigned size){
+
+		if(fd == 1){
+	    		putbuf(buffer, size);
+    }
+}
+
+void exit (int status){
+	thread_exit();
 }

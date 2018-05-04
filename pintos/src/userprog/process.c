@@ -76,6 +76,8 @@ fname_args  = (char**) malloc(10*sizeof(char*));
 
 
   /* Create a new thread to execute FILE_NAME. */
+  //tid = thread_create (fname_args[0], PRI_DEFAULT, start_process, fn_copy );
+
   tid = thread_create (fn_copy, PRI_DEFAULT, start_process, fn_copy );
   if (tid == TID_ERROR)
     palloc_free_page (fn_copy); 
@@ -499,13 +501,21 @@ setup_stack (void **esp)
         *(uint8_t*)*esp = 0x00;
       }
       *esp -= plen;
-      *(uint32_t*)*esp =(uint32_t)0;
+      *(uint8_t*)*esp =(uint32_t)0;
 
       for(int i = argcount-1;  i>=0; i--){
         offset -= strlen(fname_args[i]) +1;
         *esp= *esp -plen;
         *(int *) *esp = (int*) offset;
       }
+
+      uint32_t argv0 = *esp;
+      *esp -= plen;
+      *(char**)*esp = argv0;
+      *esp -= plen;
+      *(int*) *esp = argcount;
+      *esp -= plen;
+
       printf("before hex dump\n");
       hex_dump(*esp, *esp, (int) (PHYS_BASE - *esp), true);
       

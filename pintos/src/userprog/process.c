@@ -20,7 +20,8 @@
 #include <stdlib.h>
 
 static thread_func start_process NO_RETURN;
-static bool load (const char *cmdline, void (**eip) (void), void **esp);
+
+static bool load (const char *cmdline, void (**eip) (void), void **esp, char **save_ptr);
 
 /* Starts a new thread running a user program loaded from
    FILENAME.  The new thread may be scheduled (and may even exit)
@@ -32,26 +33,22 @@ process_execute (const char *file_name)
   char *fn_copy, *token, *save_ptr;
   tid_t tid;
 
-  // file_name = strtok_r(file_name, " ", &save_ptr);
-  /*Parse arguments*/
-
-  // char s[] = "  String to  tokenize. ";
-
-  /* Make a copy of FILE_NAME.
-     Otherwise there'sstrlcpy a race between the caller and load(). */
   fn_copy = palloc_get_page (0);
   if (fn_copy == NULL)
     return TID_ERROR;
 
 
-  strlcpy (fn_copy, file_name, strlen(file_name)+1);
+  strlcpy (fn_copy, file_name, PGSIZE);
+
+  //char *save_ptr;
+  //file_name = strtok_r((char *) file_name, " ", &save_ptr);
 
   char **t = (char**) malloc(10*sizeof(char*));
   // char *t = malloc(sizeof(file_name)+1);
   int i = 0;
-  for (token = strtok_r (fn_copy, " ", &save_ptr); token != NULL;
+  for (token = strtok_r ((char *) fn_copy, " ", &save_ptr); token != NULL;
         token = strtok_r (NULL, " ", &save_ptr)){
-    printf ("!! '%s'\n", token);
+    // printf ("!! '%s'\n", token);
     t[i] = token;
     //*t[i]= token;
     i +=1; 
@@ -59,8 +56,13 @@ process_execute (const char *file_name)
 
 
   /* Create a new thread to execute FILE_NAME. */
-  tid = thread_create (file_name, PRI_DEFAULT, start_process, t );
-  if (tid == TID_ERROR)
+  // printf("------------ t[1] : %s \n",t[1]);
+  printf("---------- filename: %s \n",file_name);
+  printf("---------- fn_copy : %s \n",fn_copy);
+
+  tid = thread_create (t[0], PRI_DEFAULT, start_process, fn_copy );
+
+  if (tid == TID_ERROR)\
     palloc_free_page (fn_copy); 
   return tid;
 }
@@ -74,12 +76,21 @@ start_process (void *file_name_)
   struct intr_frame if_;
   bool success;
 
+  // Get first token in file name
+  char *save_ptr;
+  file_name = strtok_r(file_name," ",&save_ptr);
+
   /* Initialize interrupt frame and load executable. */
   memset (&if_, 0, sizeof if_);
   if_.gs = if_.fs = if_.es = if_.ds = if_.ss = SEL_UDSEG;
   if_.cs = SEL_UCSEG;
   if_.eflags = FLAG_IF | FLAG_MBS;
-  success = load (file_name, &if_.eip, &if_.esp);
+
+  printf("----------------- file_name: %s \n", file_name);
+
+  success = load (file_name, &if_.eip, &if_.esp, &save_ptr);
+
+
 
   /* If load failed, quit. */
   palloc_free_page (file_name);
@@ -108,7 +119,11 @@ start_process (void *file_name_)
 int
 process_wait (tid_t child_tid UNUSED) 
 {
-  return -1;
+  // sema_down(&thread_current()->startup);
+  while(true)
+  {
+  thread_yield();
+  }
 }
 
 /* Free the current process's resources. */
@@ -215,7 +230,8 @@ struct Elf32_Phdr
 #define PF_W 2          /* Writable. */
 #define PF_R 4          /* Readable. */
 
-static bool setup_stack (void **esp);
+
+static bool setup_stack (void **esp, const char* file_name, char** save_ptr);
 static bool validate_segment (const struct Elf32_Phdr *, struct file *);
 static bool load_segment (struct file *file, off_t ofs, uint8_t *upage,
                           uint32_t read_bytes, uint32_t zero_bytes,
@@ -226,7 +242,7 @@ static bool load_segment (struct file *file, off_t ofs, uint8_t *upage,
    and its initial stack pointer into *ESP.
    Returns true if successful, false otherwise. */
 bool
-load (const char *file_name, void (**eip) (void), void **esp) 
+load (const char *file_name, void (**eip) (void), void **esp, char **save_ptr) 
 {
   struct thread *t = thread_current ();
   struct Elf32_Ehdr ehdr;
@@ -235,14 +251,21 @@ load (const char *file_name, void (**eip) (void), void **esp)
   bool success = false;
   int i;
 
+
+
   /* Allocate and activate page directory. */
   t->pagedir = pagedir_create ();
   if (t->pagedir == NULL) 
     goto done;
   process_activate ();
 
+  // printf("----------------- load file_name: %s \n",file_name);
+
   /* Open executable file. */
   file = filesys_open (file_name);
+
+
+
   if (file == NULL) 
     {
       printf ("load: %s: open failed\n", file_name);
@@ -321,8 +344,9 @@ load (const char *file_name, void (**eip) (void), void **esp)
         }
     }
 
+
   /* Set up stack. */
-  if (!setup_stack (esp))
+  if (!setup_stack (esp, file_name,save_ptr))
     goto done;
 
   /* Start address. */
@@ -447,11 +471,10 @@ load_segment (struct file *file, off_t ofs, uint8_t *upage,
 /* Create a minimal stack by mapping a zeroed page at the top of
    user virtual memory. */
 static bool
-setup_stack (void **esp) 
+setup_stack (void **esp, const char* file_name, char** save_ptr)
 {
   uint8_t *kpage;
   bool success = false;
-
   kpage = palloc_get_page (PAL_USER | PAL_ZERO);
   if (kpage != NULL) 
     {
@@ -461,7 +484,56 @@ setup_stack (void **esp)
       else
         palloc_free_page (kpage);
     }
+
+  char *token;
+  char **argv = malloc(2*sizeof(char *));
+  int i = 0;
+  int argc = 0;
+  int argv_size = 2;
+
+  for(token = (char *) file_name; token != NULL; token=strtok_r(NULL," ",save_ptr)){
+    printf("~~~~~~ SETUP STACK ~~~~~~~~~~~~~ %s \n",file_name);
+    *esp -= strlen(token) + 1;
+    argv[argc] = *esp;
+    argc++;
+    // Resize argv
+    if (argc >= argv_size)
+    {
+      argv_size *= 2;
+      argv = realloc(argv, argv_size*sizeof(char *));
+    }
+    memcpy(*esp, token, strlen(token) + 1);
+  }
+  int WORD_SIZE = 4;
+  argv[argc] = 0;
+  // Align to word size (4 bytes)
+  i = (size_t) *esp % WORD_SIZE;
+  if (i)
+    {
+      *esp -= i;
+      memcpy(*esp, &argv[argc], i);
+    }
+  // Push argv[i] for all i
+  for (i = argc; i >= 0; i--)
+    {
+      *esp -= sizeof(char *);
+      memcpy(*esp, &argv[i], sizeof(char *));
+    }
+  // Push argv
+  token = *esp;
+  *esp -= sizeof(char **);
+  memcpy(*esp, &token, sizeof(char **));
+  // Push argc
+  *esp -= sizeof(int);
+  memcpy(*esp, &argc, sizeof(int));
+  // Push fake return addr
+  *esp -= sizeof(void *);
+  memcpy(*esp, &argv[argc], sizeof(void *));
+  // Free argv
+  free(argv);
+
   return success;
+
 }
 
 /* Adds a mapping from user virtual address UPAGE to kernel

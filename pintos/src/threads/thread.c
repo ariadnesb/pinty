@@ -93,6 +93,9 @@ thread_init (void)
   list_init (&ready_list);
   list_init (&all_list);
 
+  struct semaphore startup;
+  sema_init (&startup, 0);
+
   /* Set up a thread structure for the running thread. */
   initial_thread = running_thread ();
   init_thread (initial_thread, "main", PRI_DEFAULT);

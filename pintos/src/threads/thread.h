@@ -90,6 +90,9 @@ struct thread
     int priority;                       /* Priority. */
     struct list_elem allelem;           /* List element for all threads list. */
 
+    // made for project 2 filesystems
+    // struct semaphore startup;
+
     /* Shared between thread.c and synch.c. */
     struct list_elem elem;              /* List element. */
 

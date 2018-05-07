@@ -126,15 +126,13 @@ start_process (void *file_name_)
    does nothing. */
 int
 process_wait (tid_t child_tid UNUSED) 
-{/*
-  while (1){
+{
+  /* while (1){
 
   }
   return -1;
-*/
-
+  */
   struct child_process* cp = get_child_process(child_tid);
-  printf("tf we r here\n");
   if (!cp)
     {
       return ERROR;
@@ -277,23 +275,23 @@ load (const char *file_name, void (**eip) (void), void **esp)
   off_t file_ofs;
   bool success = false;
   int i;
-      printf("start loap\n");
+  // printf("start loap\n");
 
   /* Allocate and activate page directory. */
   t->pagedir = pagedir_create ();
   if (t->pagedir == NULL) 
     goto done;
   process_activate ();
-  printf(".5;%s\n", file_name);
+  // printf(".5;%s\n", file_name);
   /* Open executable file. */
   file = filesys_open (file_name);
-  printf(".6\n");
+  // printf(".6\n");
   if (file == NULL) 
     {
-      printf ("load: %s: open failed\n", file_name);
+      // printf ("load: %s: open failed\n", file_name);
       goto done; 
     }
-      printf("1\n");
+      // printf("1\n");
 
   /* Read and verify executable header. */
   if (file_read (file, &ehdr, sizeof ehdr) != sizeof ehdr
@@ -304,10 +302,10 @@ load (const char *file_name, void (**eip) (void), void **esp)
       || ehdr.e_phentsize != sizeof (struct Elf32_Phdr)
       || ehdr.e_phnum > 1024) 
     {
-      printf ("load: %s: error loading executable\n", file_name);
+      // printf ("load: %s: error loading executable\n", file_name);
       goto done; 
     }
-      printf("2\n");
+      // printf("2\n");
 
   /* Read program headers. */
   file_ofs = ehdr.e_phoff;
@@ -371,7 +369,7 @@ load (const char *file_name, void (**eip) (void), void **esp)
           break;
         }
     }
-        printf("before call setup_stack\n");
+        // printf("before call setup_stack\n");
 
   /* Set up stack. */
   if (!setup_stack (esp))
@@ -502,7 +500,7 @@ setup_stack (void **esp)
   void *offset = PHYS_BASE;
   int plen = sizeof(void *);
   char *fname = fname_args[0];
-        printf("start of setup stack\n");
+  // printf("start of setup stack\n");
 
   kpage = palloc_get_page (PAL_USER | PAL_ZERO);
   if (kpage != NULL) 
@@ -538,8 +536,8 @@ setup_stack (void **esp)
       *(int*) *esp = argcount;
       *esp -= plen;
 
-      printf("before hex dump\n");
-      hex_dump(*esp, *esp, (int) (PHYS_BASE - *esp), true);
+      // printf("before hex dump\n");
+      // hex_dump(*esp, *esp, (int) (PHYS_BASE - *esp), true);
       
       }
       else {

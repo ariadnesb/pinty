@@ -93,6 +93,7 @@ start_process (void *file_name_)
   char *file_name = file_name_;
   struct intr_frame if_;
   bool success;
+  printf("------------- START PROCESS \n");
 
   /* Initialize interrupt frame and load executable. */
   memset (&if_, 0, sizeof if_);
@@ -132,6 +133,8 @@ process_wait (tid_t child_tid UNUSED)
   }
   return -1;
   */
+  printf(" -------------------- WAITING \n");
+
   struct child_process* cp = get_child_process(child_tid);
   if (!cp)
     {
@@ -159,6 +162,10 @@ process_exit (void)
   struct thread *cur = thread_current ();
   uint32_t *pd;
 
+  printf(" -------------------- PROCESS EXIT \n");
+
+
+  
   /* Destroy the current process's page directory and switch back
      to the kernel-only page directory. */
   pd = cur->pagedir;
@@ -536,8 +543,8 @@ setup_stack (void **esp)
       *(int*) *esp = argcount;
       *esp -= plen;
 
-      // printf("before hex dump\n");
-      // hex_dump(*esp, *esp, (int) (PHYS_BASE - *esp), true);
+      printf("before hex dump\n");
+      hex_dump(*esp, *esp, (int) (PHYS_BASE - *esp), true);
       
       }
       else {

@@ -28,7 +28,8 @@ syscall_handler (struct intr_frame *f UNUSED)
 {
 
 	int call = *(int *) f-> esp;
-	// printf("system call numero %d!\n", call);
+	printf("------------- system call: &d \n", call);
+  //printf("system call halt %d!\n", SYS_EXIT);
 
 	// hex_dump(f->esp, f-> esp, (int) (PHYS_BASE - f->esp), true);
 	
@@ -39,55 +40,57 @@ syscall_handler (struct intr_frame *f UNUSED)
   
 
   switch(call){
-		case SYS_HALT:                   /* Halt the operating system. */
+    case SYS_HALT:                   /* Halt the operating system. */
     {
-     shutdown_power_off();
-   }
+      printf("-------------------------- HALT \n");
+      shutdown_power_off();
+    }
 
-    	case SYS_EXIT:                  /* Terminate this process. */
-   {
-    thread_exit();
-  }
-    	case SYS_EXEC:                   /* Start another process. */
-    	case SYS_WAIT:                   /* Wait for a child process to die. */
-  {
-    // printf("begin on sys_wait\n");
-    get_arg(f, &arg[0], 1);
-    f->eax = wait(arg[0]);
-    break;
-  }
-   		case SYS_CREATE:                 /* Create a file. */
-    	case SYS_REMOVE:                 /* Delete a file. */
-    	case SYS_OPEN:                   /* Open a file. */
-    	case SYS_FILESIZE:               /* Obtain a file's size. */
-    	case SYS_READ:                   /* Read from a file. */
-  {
+    case SYS_EXIT:                  /* Terminate this process. */
+    {
+      printf("-------------------------- EXITING \n");
+      thread_exit();
+    }
+    case SYS_EXEC:
+    {
+      printf("-------------------------- EXEC \n");
+    }
+    case SYS_WAIT:
+    {
+      printf("begin on sys_wait\n");
+      get_arg(f, &arg[0], 1);
+      f->eax = wait(arg[0]);
+      break;
+    }
+    case SYS_CREATE:                 /* Create a file. */
+    case SYS_REMOVE:                 /* Delete a file. */
+    case SYS_OPEN:                   /* Open a file. */
+    case SYS_FILESIZE:               /* Obtain a file's size. */
+    case SYS_READ:                   /* Read from a file. */
+    {
     // printf("hello there read... \n");
-  } 
-  case SYS_WRITE: 
-  {
-   get_arg(f, &arg[0], 3);
-   // printf("%s\n", "We have a write");  
-   check_valid_buffer((void * ) arg[1], *(unsigned*) arg[2]);
-   f->eax = write(*(int*)arg[0], *(char**) arg[1], *(unsigned *) arg[2]);
-   break;
- }
-    	               /* Write to a file. */
-    	case SYS_SEEK:                   /* Change position in a file. */
-    	case SYS_TELL:                   /* Report current position in a file. */
-    	case SYS_CLOSE:                  /* Close a file. */
+    } 
+    case SYS_WRITE: 
+    {
+    get_arg(f, &arg[0], 3);
+    // printf("%s\n", "We have a write");  
+    check_valid_buffer((void * ) arg[1], *(unsigned*) arg[2]);
+    f->eax = write(*(int*)arg[0], *(char**) arg[1], *(unsigned *) arg[2]);
+    break;
+    }
+                 /* Write to a file. */
+    case SYS_SEEK:                   /* Change position in a file. */
+    case SYS_TELL:                   /* Report current position in a file. */
+    case SYS_CLOSE:                  /* Close a file. */
 
     /* Project 3 and optionally project 4. */
-    	case SYS_MMAP:                   /* Map a file into memory. */
-    	case SYS_MUNMAP:                 /* Remove a memory mapping. */
+    case SYS_MMAP:                   /* Map a file into memory. */
+    case SYS_MUNMAP:                 /* Remove a memory mapping. */
 
- default:
- // printf ("system call!\n");
- thread_exit ();
-
-
-
-}
+    default:
+    // printf ("system call!\n");
+    thread_exit ();
+  }
 }
 
 void check_valid_buffer (void* buffer, unsigned size){

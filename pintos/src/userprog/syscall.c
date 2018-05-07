@@ -58,7 +58,9 @@ syscall_handler (struct intr_frame *f UNUSED)
 
     case SYS_EXIT:                  /* Terminate this process. */
     {
-      printf("-------------------------- EXITING \n");
+      //printf("-------------------------- EXITING \n");
+      get_arg(f, &arg[0], 1);
+      thread_current ()->status = *(int*)arg[0];
       thread_exit();
     }
     case SYS_EXEC:

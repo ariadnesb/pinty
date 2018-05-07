@@ -103,7 +103,6 @@ thread_init (void)
   init_thread (initial_thread, "main", PRI_DEFAULT);
   initial_thread->status = THREAD_RUNNING;
   initial_thread->tid = allocate_tid ();
-  printf("------------------ init_thread \n");
   
 }
 
@@ -113,6 +112,7 @@ void
 thread_start (void) 
 {
   /* Create the idle thread. */
+
   struct semaphore idle_started;
   sema_init (&idle_started, 0);
   thread_create ("idle", PRI_MIN, idle, &idle_started);
@@ -122,6 +122,7 @@ thread_start (void)
 
   /* Wait for the idle thread to initialize idle_thread. */
   sema_down (&idle_started);
+
 }
 
 /* Called by the timer interrupt handler at each timer tick.
@@ -205,6 +206,9 @@ thread_create (const char *name, int priority,
   sf->eip = switch_entry;
   sf->ebp = 0;
 
+  struct child_process *cp = add_child_process(t->tid);
+  t->cp = cp;
+
   /* Add to run queue. */
   thread_unblock (t);
 
@@ -237,7 +241,7 @@ thread_block (void)
    update other data. */
 void
 thread_unblock (struct thread *t) 
-{
+{ 
   enum intr_level old_level;
 
   ASSERT (is_thread (t));
@@ -247,6 +251,7 @@ thread_unblock (struct thread *t)
   list_push_back (&ready_list, &t->elem);
   t->status = THREAD_READY;
   intr_set_level (old_level);
+
 }
 
 /* Returns the name of the running thread. */
@@ -299,6 +304,7 @@ thread_exit (void)
   thread_current ()->status = THREAD_DYING;
   schedule ();
   NOT_REACHED ();
+
 }
 
 /* Yields the CPU.  The current thread is not put to sleep and
@@ -306,6 +312,7 @@ thread_exit (void)
 void
 thread_yield (void) 
 {
+
   struct thread *cur = thread_current ();
   enum intr_level old_level;
   
@@ -473,7 +480,7 @@ init_thread (struct thread *t, const char *name, int priority)
   list_push_back (&all_list, &t->allelem);
   intr_set_level (old_level);
 
-  //list_init(&t->file_list);
+  list_init(&t->file_list);
   //t->fd = MIN_FD;
 
   list_init(&t->child_list);
@@ -595,3 +602,21 @@ allocate_tid (void)
 /* Offset of `stack' member within `struct thread'.
    Used by switch.S, which can't figure it out on its own. */
 uint32_t thread_stack_ofs = offsetof (struct thread, stack);
+
+
+bool thread_alive (int pid)
+{
+  struct list_elem *e;
+
+
+  for (e = list_begin (&all_list); e != list_end (&all_list);
+       e = list_next (e))
+    {
+      struct thread *t = list_entry (e, struct thread, allelem);
+      if (t->tid == pid)
+  {
+    return true;
+  }
+    }
+  return false;
+}

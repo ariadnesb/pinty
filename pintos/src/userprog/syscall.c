@@ -12,7 +12,16 @@
 #include "userprog/pagedir.h"
 #include "userprog/process.h"
 
+
 #define virt_bottom ((int *) 0x0804ba68)
+
+
+struct process_file {
+  struct file *file;
+  int fd;
+  struct list_elem elem;
+};
+
 
 static void syscall_handler (struct intr_frame *);
 //void * arg[]
@@ -28,7 +37,7 @@ syscall_handler (struct intr_frame *f UNUSED)
 {
 
 	int call = *(int *) f-> esp;
-	printf("------------- system call: &d \n", call);
+	printf("------------- system call: %d \n", call);
   //printf("system call halt %d!\n", SYS_EXIT);
 
 	// hex_dump(f->esp, f-> esp, (int) (PHYS_BASE - f->esp), true);
@@ -137,6 +146,8 @@ int wait (int pid)
 
 struct child_process* add_child_process (int pid)
 {
+  printf("--------------------------------------------- added child process \n");
+
   struct child_process* cp = malloc(sizeof(struct child_process));
   cp->pid = pid;
   cp->load = NOT_LOADED;
@@ -157,19 +168,79 @@ struct child_process* get_child_process (int pid)
   for (e = list_begin (&t->child_list); e != list_end (&t->child_list);
    e = list_next (e))
   {
-    printf("--------------------------------------------- here \n");
 
     struct child_process *cp = list_entry (e, struct child_process, elem);
     if (pid == cp->pid)
     {
+    printf("-------------------- get child process \n");
+
      return cp;
    }
  }
  return NULL;
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+void process_close_file (int fd)
+{
+  struct thread *t = thread_current();
+  struct list_elem *next, *e = list_begin(&t->file_list);
+
+  while (e != list_end (&t->file_list))
+    {
+      next = list_next(e);
+      struct process_file *pf = list_entry (e, struct process_file, elem);
+      if (fd == pf->fd || fd == -1)
+  {
+    file_close(pf->file);
+    list_remove(&pf->elem);
+    free(pf);
+    if (fd != -1)
+      {
+        return;
+      }
+  }
+      e = next;
+    }
+}
+
+
+
+
+
 void remove_child_process (struct child_process *cp)
 {
+
   list_remove(&cp->elem);
   free(cp);
+}
+
+void remove_child_processes (void)
+{
+  struct thread *t = thread_current();
+  struct list_elem *next, *e = list_begin(&t->child_list);
+
+  while (e != list_end (&t->child_list))
+    {
+      next = list_next(e);
+      struct child_process *cp = list_entry (e, struct child_process,
+               elem);
+      list_remove(&cp->elem);
+      free(cp);
+      e = next;
+    }
 }

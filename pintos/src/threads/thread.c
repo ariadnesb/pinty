@@ -451,6 +451,10 @@ is_thread (struct thread *t)
 static void
 init_thread (struct thread *t, const char *name, int priority)
 {
+  list_init(&t->file_list);
+  t->fd = 2;
+
+
   enum intr_level old_level;
 
   ASSERT (t != NULL);

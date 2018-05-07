@@ -1,0 +1,250 @@
+#include "userprog/syscall.h"
+#include <stdio.h>
+#include <syscall-nr.h>
+#include <user/syscall.h>
+#include "devices/input.h"
+#include "devices/shutdown.h"
+#include "filesys/file.h"
+#include "filesys/filesys.h"
+#include "threads/interrupt.h"
+#include "threads/malloc.h"
+#include "threads/synch.h"
+#include "threads/thread.h"
+#include "threads/vaddr.h"
+#include "userprog/pagedir.h"
+#include "userprog/process.h"
+
+#define virt_bottom ((int *) 0x0804ba68)
+
+#define MAX_ARGS 3
+#define USER_VADDR_BOTTOM ((void *) 0x08048000)
+
+
+struct process_file {
+  struct file *file;
+  int fd;
+  struct list_elem elem;
+};
+
+
+static void syscall_handler (struct intr_frame *);
+static void get_arg2 (struct intr_frame *f, int *arg, int n);
+int write (int fd, const void *buffer, unsigned size);
+int user_to_kernel_ptr(const void *vaddr);
+struct file* process_get_file (int fd);
+
+
+//void * arg[]
+
+struct lock filesys_lock;
+void
+syscall_init (void) 
+{
+  lock_init(&filesys_lock);
+  intr_register_int (0x30, 3, INTR_ON, syscall_handler, "syscall");
+}
+
+static void
+syscall_handler (struct intr_frame *f UNUSED) 
+{
+
+  int call = *(int *) f-> esp;
+    // printf("system call numero %d!\n", call);
+
+  hex_dump(f->esp, f-> esp, (int) (PHYS_BASE - f->esp), true);
+
+        //make a copy of the stack pointer
+
+
+  void* arg[5];
+
+  printf("==== sys exec call %d \n",call);
+
+  switch(call){
+    case SYS_HALT:                   /* Halt the operating system. */
+    {
+      shutdown_power_off();
+    }
+    case SYS_EXIT:                  /* Terminate this process. */
+    {
+      thread_exit();
+    }
+    case SYS_EXEC:                   /* Start another process. */
+    {   
+      printf("-------------------- EXEC \n");
+      int i;
+      int *ptr;
+      // get_arg(f, &arg[0], 1);
+      for (i = 0; i < 1; i++) {
+        ptr = (int *) f->esp + i + 1;
+        // check_valid_ptr((const void *) ptr);
+        if  ( !is_user_vaddr( (const void *) ptr) || ((const void *) ptr) < USER_VADDR_BOTTOM )
+        {
+                    // exit(-1);
+          thread_exit();
+        }
+
+        arg[i] = *ptr;
+      }
+    }
+    case SYS_READ:
+    {
+      // get_arg(f, &arg[0], 3);
+      printf("--------------------------- READ \n");
+      struct intr_frame *f = f;
+      int *arg = &arg[0];
+      int n=3;
+
+      int i;
+      int *ptr;
+      for (i = 0; i < n; i++)
+      {
+        ptr = (int *) f->esp + i + 1;
+        // check_valid_ptr((const void *) ptr);
+        if  ( !is_user_vaddr( (const void *) ptr) || ((const void *) ptr) < USER_VADDR_BOTTOM )
+        {
+          thread_exit();
+        }
+        arg[i] = *ptr;
+      }
+      break;  
+    }
+
+    case SYS_WRITE: 
+    {
+      printf("--------------------------- WRITE \n");
+
+      get_arg2(f, &arg[0], 3);
+      check_valid_buffer((void *) arg[1], (unsigned) arg[2]);
+      arg[1] = user_to_kernel_ptr((const void *) arg[1]);
+      f->eax = write(arg[0], (const void *) arg[1],
+               (unsigned) arg[2]);
+      break;
+    }
+  }
+
+}
+
+void check_valid_buffer (void* buffer, unsigned size){
+  unsigned i;
+  char* local_buffer = (char *) buffer; 
+  for (i = 0 ; i<size; i++){
+    check_valid_ptr((const void *) local_buffer);
+    local_buffer++;
+  }
+}
+
+
+void check_valid_ptr (const void *vaddr){
+  if (!is_user_vaddr(vaddr) || vaddr < virt_bottom){
+    exit(ERROR);
+  }
+}
+
+
+void get_arg2 (struct intr_frame *f, int *arg, int n)
+  {
+    int i;
+    int *ptr;
+    int wlen = sizeof(void *);
+    for (i = 0; i < n; i++)
+      {
+        //ptr = (int *) f->esp + ((i + 1) *wlen);
+        //check_valid_ptr((const void *) ptr);
+        //arg[i] = *ptr;
+        arg[i] =  f->esp + ((i + 1) *wlen);
+      }
+}
+
+
+void exit (int status){
+  thread_exit();
+}
+
+
+
+int write (int fd, const void *buffer, unsigned size)
+{
+  if (fd == STDOUT_FILENO)
+    {
+      putbuf(buffer, size);
+      return size;
+    }
+  lock_acquire(&filesys_lock);
+  struct file *f = process_get_file(fd);
+  if (!f)
+    {
+      lock_release(&filesys_lock);
+      return ERROR;
+    }
+  int bytes = file_write(f, buffer, size);
+  lock_release(&filesys_lock);
+  return bytes;
+}
+
+
+struct file* process_get_file (int fd)
+{
+  struct thread *t = thread_current();
+  struct list_elem *e;
+
+  for (e = list_begin (&t->file_list); e != list_end (&t->file_list);
+       e = list_next (e))
+        {
+          struct process_file *pf = list_entry (e, struct process_file, elem);
+          if (fd == pf->fd)
+      {
+        return pf->file;
+      }
+        }
+  return NULL;
+}
+
+int user_to_kernel_ptr(const void *vaddr)
+{
+  // TO DO: Need to check if all bytes within range are correct
+  // for strings + buffers
+  check_valid_ptr(vaddr);
+  void *ptr = pagedir_get_page(thread_current()->pagedir, vaddr);
+  if (!ptr)
+    {
+      exit(ERROR);
+    }
+  return (int) ptr;
+}
+
+struct child_process* add_child_process (int pid)
+{
+  struct child_process* cp = malloc(sizeof(struct child_process));
+  cp->pid = pid;
+  cp->load = NOT_LOADED;
+  cp->wait = false;
+  cp->exit = false;
+  lock_init(&cp->wait_lock);
+  list_push_back(&thread_current()->child_list,
+     &cp->elem);
+  return cp;
+}
+
+struct child_process* get_child_process (int pid)
+{
+  struct thread *t = thread_current();
+  struct list_elem *e;
+
+  for (e = list_begin (&t->child_list); e != list_end (&t->child_list);
+       e = list_next (e))
+        {
+          struct child_process *cp = list_entry (e, struct child_process, elem);
+          if (pid == cp->pid)
+      {
+        return cp;
+      }
+        }
+  return NULL;
+}
+
+void remove_child_process (struct child_process *cp)
+{
+  list_remove(&cp->elem);
+  free(cp);
+}

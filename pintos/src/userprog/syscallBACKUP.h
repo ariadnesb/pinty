@@ -1,28 +1,14 @@
 #ifndef USERPROG_SYSCALL_H
 #define USERPROG_SYSCALL_H
 #define ERROR -1
-#define NOT_LOADED 0
-
 
 void syscall_init (void);
+void check_valid_buffer (void* buffer, unsigned size);
+void check_valid_ptr (const void *vaddr);
+void exit (int status);
+
 
 #endif /* userprog/syscall.h */
-
-#include "threads/synch.h"
-
-struct child_process* add_child_process (int pid);
-struct child_process* get_child_process (int pid);
-void remove_child_process (struct child_process *cp);
-
-struct child_process {
-  int pid;
-  int load;
-  bool wait;
-  bool exit;
-  int status;
-  struct lock wait_lock;
-  struct list_elem elem;
-};
 
 /*
 

@@ -481,11 +481,11 @@ init_thread (struct thread *t, const char *name, int priority)
   intr_set_level (old_level);
 
   list_init(&t->file_list);
-  //t->fd = MIN_FD;
+  t->fd = 2;
 
   list_init(&t->child_list);
-  //t->cp = NULL;
-  //t->parent = NO_PARENT;
+  t->cp = NULL;
+  t->parent = -1;
 
 }
 

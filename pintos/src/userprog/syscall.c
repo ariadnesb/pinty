@@ -37,7 +37,7 @@ syscall_handler (struct intr_frame *f UNUSED)
 {
 
 	int call = *(int *) f-> esp;
-	printf("------------- system call: %d \n", call);
+	printf("\n ------------- system call: %d \n", call);
   //printf("system call halt %d!\n", SYS_EXIT);
 
 	// hex_dump(f->esp, f-> esp, (int) (PHYS_BASE - f->esp), true);
@@ -51,18 +51,21 @@ syscall_handler (struct intr_frame *f UNUSED)
   switch(call){
     case SYS_HALT:                   /* Halt the operating system. */
     {
-      printf("-------------------------- HALT \n");
+      printf("-------------------------- SYSCALL HALT \n");
       shutdown_power_off();
     }
 
     case SYS_EXIT:                  /* Terminate this process. */
     {
-      printf("-------------------------- EXITING \n");
+      printf("-------------------------- SYSCALL.C EXITING \n");
+      struct thread *cur = thread_current();
+      printf ("%s: exit(%d)\n", cur->name, SYS_EXIT);
       thread_exit();
+      exit(SYS_EXIT);
     }
     case SYS_EXEC:
     {
-      printf("-------------------------- EXEC \n");
+      printf("-------------------------- SYSCALL EXEC \n");
     }
     case SYS_WAIT:
     {
@@ -243,4 +246,5 @@ void remove_child_processes (void)
       free(cp);
       e = next;
     }
+  printf("----------- syscall.c --- removed child processes \n");
 }

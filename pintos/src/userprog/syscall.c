@@ -50,6 +50,12 @@ syscall_handler (struct intr_frame *f UNUSED)
 			}
     	case SYS_EXEC:                   /* Start another process. */
     	case SYS_WAIT:                   /* Wait for a child process to die. */
+			{
+				printf("begin on sys_wait\n");
+				get_arg(f, &arg[0], 1);
+				f->eax = wait(arg[0]);
+				break;
+			}
    		case SYS_CREATE:                 /* Create a file. */
     	case SYS_REMOVE:                 /* Delete a file. */
     	case SYS_OPEN:                   /* Open a file. */
@@ -140,4 +146,45 @@ void check_valid_ptr (const void *vaddr){
 
 void exit (int status){
 	thread_exit();
+}
+
+int wait (int pid)
+{
+  return process_wait(pid);
+}
+
+struct child_process* add_child_process (int pid)
+{
+  struct child_process* cp = malloc(sizeof(struct child_process));
+  cp->pid = pid;
+  cp->load = NOT_LOADED;
+  cp->wait = false;
+  cp->exit = false;
+  lock_init(&cp->wait_lock);
+  list_push_back(&thread_current()->child_list,
+		 &cp->elem);
+  return cp;
+}
+
+struct child_process* get_child_process (int pid)
+{
+  struct thread *t = thread_current();
+  struct list_elem *e;
+
+  for (e = list_begin (&t->child_list); e != list_end (&t->child_list);
+       e = list_next (e))
+        {
+          struct child_process *cp = list_entry (e, struct child_process, elem);
+          if (pid == cp->pid)
+	    {
+	      return cp;
+	    }
+        }
+  return NULL;
+}
+
+void remove_child_process (struct child_process *cp)
+{
+  list_remove(&cp->elem);
+  free(cp);
 }

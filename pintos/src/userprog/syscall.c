@@ -24,7 +24,7 @@ struct process_file {
 
 
 static void syscall_handler (struct intr_frame *);
-//void * arg[]
+void * arg[];
 
 void
 syscall_init (void) 
@@ -38,14 +38,11 @@ syscall_handler (struct intr_frame *f UNUSED)
 
 	int call = *(int *) f-> esp;
 	printf("\n ------------- system call: %d \n", call);
-  //printf("system call halt %d!\n", SYS_EXIT);
+  // printf("SYS_WRITE %d!\n", SYS_WRITE);
 
-	// hex_dump(f->esp, f-> esp, (int) (PHYS_BASE - f->esp), true);
-	
-  		//make a copy of the stack pointer
-
-
-  void* arg[5];
+	//hex_dump(f->esp, f-> esp, (int) (PHYS_BASE - f->esp), true);
+  //printf("------------- \n");
+  void* arg[10];
   
 
   switch(call){
@@ -84,11 +81,11 @@ syscall_handler (struct intr_frame *f UNUSED)
     } 
     case SYS_WRITE: 
     {
-    get_arg(f, &arg[0], 3);
-    // printf("%s\n", "We have a write");  
-    check_valid_buffer((void * ) arg[1], *(unsigned*) arg[2]);
-    f->eax = write(*(int*)arg[0], *(char**) arg[1], *(unsigned *) arg[2]);
-    break;
+      printf("-------------------------- SYSCALL WRITE \n");
+      get_arg(f, &arg[0], 3);
+      check_valid_buffer((void * ) arg[1], *(unsigned*) arg[2]);
+      f->eax = write(*(int*)arg[0], *(char**) arg[1], *(unsigned *) arg[2]);
+      break;
     }
                  /* Write to a file. */
     case SYS_SEEK:                   /* Change position in a file. */

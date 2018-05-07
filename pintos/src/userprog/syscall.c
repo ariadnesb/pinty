@@ -14,6 +14,7 @@
 
 
 #define virt_bottom ((int *) 0x0804ba68)
+struct file * get_file(int fd);
 
 
 struct process_file {
@@ -74,6 +75,12 @@ syscall_handler (struct intr_frame *f UNUSED)
     case SYS_CREATE:                 /* Create a file. */
     case SYS_REMOVE:                 /* Delete a file. */
     case SYS_OPEN:                   /* Open a file. */
+    {
+    	get_arg(f, &arg[0], 1);
+    	arg[0] = user_to_kernel_pointer((const void*) arg[0]);
+    	f->eax = open(*(char**) arg[0]);
+    	break;
+    }
     case SYS_FILESIZE:               /* Obtain a file's size. */
     case SYS_READ:                   /* Read from a file. */
     {
@@ -83,7 +90,7 @@ syscall_handler (struct intr_frame *f UNUSED)
     {
     get_arg(f, &arg[0], 3);
     // printf("%s\n", "We have a write");  
-    check_valid_buffer((void * ) arg[1], *(unsigned*) arg[2]);
+    check_pointer((void * ) arg[1], *(unsigned*) arg[2]);
     f->eax = write(*(int*)arg[0], *(char**) arg[1], *(unsigned *) arg[2]);
     break;
     }
@@ -106,15 +113,24 @@ void check_valid_buffer (void* buffer, unsigned size){
 	unsigned i;
 	char* local_buffer = (char *) buffer; 
 	for (i = 0 ; i<size; i++){
-		check_valid_ptr((const void *) local_buffer);
+		check_pointer((const void *) local_buffer);
 		local_buffer++;
 	}
 }
 
-void check_valid_ptr (const void *vaddr){
-	if (!is_user_vaddr(vaddr) || vaddr < virt_bottom){
+void check_pointer (const void *vadd){
+	if (!is_user_vaddr(vadd) || vadd < virt_bottom){
 		exit(ERROR);
 	}
+}
+
+int user_to_kernel_pointer (const void * vadd){
+	check_pointer(vadd);
+	void *pointer = pagedir_get_page(thread_current()->pagedir, vadd);
+	if (!pointer){
+		exit(ERROR);
+	}
+	return (int) pointer; //does this need to be derefrenced here?
 }
 
 
@@ -133,6 +149,12 @@ int write(int fd, void* buffer, unsigned size){
   if(fd == 1){
    putbuf(buffer, size);
  }
+ else{
+ 	struct file *f = get_file(fd);
+ 	int byteswritten= file_write(f, buffer, size);
+ 	return byteswritten;
+ }
+ return (-1);
 }
 
 void exit (int status){
@@ -142,6 +164,15 @@ void exit (int status){
 int wait (int pid)
 {
   return process_wait(pid);
+}
+
+int open (const char * file){
+	struct file *f =filesys_open(file);
+	struct pfile *process_file = malloc(sizeof(struct pfile));
+	process_file -> fd = thread_current()-> fd +1 ; 
+	process_file -> file = f;
+	list_push_back(&thread_current()-> file_list, &process_file->pfelem);
+	return (&process_file->pfelem);
 }
 
 struct child_process* add_child_process (int pid)
@@ -180,6 +211,10 @@ struct child_process* get_child_process (int pid)
  return NULL;
 }
 
+struct file * get_file(int fd){
+	struct inode* current_inode = inode_open(fd);
+	return(file_open(current_inode));
+}
 
 
 

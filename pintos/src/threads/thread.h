@@ -4,6 +4,7 @@
 #include <debug.h>
 #include <list.h>
 #include <stdint.h>
+#include "threads/synch.h"
 
 /* States in a thread's life cycle. */
 enum thread_status
@@ -24,6 +25,9 @@ typedef int tid_t;
 #define PRI_DEFAULT 31                  /* Default priority. */
 #define PRI_MAX 63                      /* Highest priority. */
 
+
+
+#define NOT_LOADED 0
 /* A kernel thread or user process.
 
    Each thread structure is stored in its own 4 kB page.  The
@@ -112,6 +116,17 @@ struct thread
     struct child_process* cp;
   };
 
+
+struct child_process {
+  int pid;
+  int load;
+  bool wait;
+  bool exit;
+  int status;
+  struct lock wait_lock;
+  struct list_elem elem;
+};
+
 /* If false (default), use round-robin scheduler.
    If true, use multi-level feedback queue scheduler.
    Controlled by kernel command-line option "-o mlfqs". */
@@ -149,5 +164,6 @@ int thread_get_recent_cpu (void);
 int thread_get_load_avg (void);
 
 bool thread_alive (int pid);
+struct child_process* add_child_process (int pid);
 
 #endif /* threads/thread.h */

@@ -285,6 +285,7 @@ run_task (char **argv)
   
   printf ("Executing '%s':\n", task);
 #ifdef USERPROG
+  
   process_wait (process_execute (task));
   //thread_yield(); //THIS IS NOT KOSHER PLEASE PLEASE PLEASE REMEMBER TO TAKE IT OUT!!!!!!
 #else

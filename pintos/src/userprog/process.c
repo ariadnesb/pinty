@@ -65,12 +65,13 @@ process_execute (const char *file_name)
   file_name = strtok_r((char *) file_name, " ", &save_ptr);
 
 
-  /* Create a new thread to execute FILE_NAME. */
+  /* Create a new thread to execute FILE_NAME. */`
   // tid = thread_create (fname_args[0], PRI_DEFAULT, start_process, fn_copy );
   tid = thread_create (file_name, PRI_DEFAULT, start_process, fn_copy);
 
   //tid = thread_create (fname_args[0], PRI_DEFAULT +1, start_process, fn_copy );
-  
+  // tid = thread_create (fname_args[0], PRI_DEFAULT, start_process, fn_copy );
+
   if (tid == TID_ERROR)
     palloc_free_page (fn_copy); 
 
@@ -508,7 +509,7 @@ setup_stack (void **esp)
         *esp -= (strlen(fname_args[i]) +1);
         strlcpy(*esp, fname_args[i], strlen(fname_args[i]) + 1);
       }
-      //*esp -=(strlen(fname) +1);
+     // *esp -=(strlen(fname) +1);
       //strlcpy(*esp, fname, strlen(fname) +1);
 
       while ((unsigned int) (*esp) % plen != 0){
@@ -516,7 +517,10 @@ setup_stack (void **esp)
         *(uint8_t*)*esp = 0x00;
       }
       *esp -= plen;
+    
       *(uint8_t*)*esp =(uint32_t)0;
+
+      //*(int*)*esp =(uint32_t)0;
 
       for(int i = argcount-1;  i>=0; i--){
         offset -= strlen(fname_args[i]) +1;
@@ -535,10 +539,22 @@ setup_stack (void **esp)
       //hex_dump(*esp, *esp, (int) (PHYS_BASE - *esp), true);
       // hex_dump((uintptr_t *) *esp, (const void *) *esp, (int)(PHYS_BASE - *esp), true);
 
+       /* MASTER BRANCH ORIGINAL *esp -= 4;
+      *((void**)(*esp)) = (*esp + 4);
+
+      *esp -= 4;
+      *((int *)*esp) = argcount;
+
+      *esp -= 4;
+      *((int *)*esp) = 0;
+
+      printf("before hex dump\n");
+      hex_dump((uintptr_t)*esp, *esp, (int) (PHYS_BASE - *esp), true);*/
       }
       else {
         palloc_free_page (kpage);
       }
+    
     
   return success;
 }

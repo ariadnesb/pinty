@@ -2,8 +2,11 @@
 Design Document for Project #2: System Calls and User Programs
 
 ---- GROUP ----
+
 Will Burghard <wb5289@bard.edu>
+
 Jason Chang <jc8745@bard.edu>
+
 Ariadne Sinnis-Bourozakis<as8594@bard.edu>
 
 ---- PRELIMINARIES ----
@@ -11,10 +14,14 @@ Ariadne Sinnis-Bourozakis<as8594@bard.edu>
 Section 1: Argument Passing
 
 ---- DATA STRUCTURES ----
+
 -For the argument passing section, we didn’t create any new structs, typedefs, or enumerations.
 
 ---- ALGORITHMS ----
-Q1. Arguments are passed into our argument array using the strtok_r, which when iterated over breaks a continuous string into an array of strings as separated by a delimiter, which in our case is simply a space.
+
+Q1. 
+
+Arguments are passed into our argument array using the strtok_r, which when iterated over breaks a continuous string into an array of strings as separated by a delimiter, which in our case is simply a space.
 for(token = strtok_r((char *)fn_copy, “ “, &save_ptr); token != null; token = strtok_r(NULL, “ “, &save_ptr){
 t[i] = token;
 i += 1;
@@ -26,6 +33,7 @@ Q2. The advantage of using the shell rather than the kernel to parse commands is
 Section 2: System Calls
 
 ---- DATA STRUCTURES ----
+
 (In userprog/syscall.c):#define virt_bottom ((int *) 0x0804ba68)
 Used in check_pointer to represent the bottom of user space in memory.
 (In userprog/process.h): struct pfile {

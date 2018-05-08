@@ -45,11 +45,6 @@ process_execute (const char *file_name)
     return TID_ERROR; // palloc problem
 
   strlcpy (fn_copy, file_name,PGSIZE);
-  // TO DO! Determine how many arguments are in the file_name
-  // and malloc accordingly! 10 is a place holder!!
- 
-
-  // Initialize a counter to keep track argument #
   
   // Iterate 'token' with delimiter ' '
   for (token = strtok_r (fn_copy, " ", &save_ptr); token != NULL;
@@ -61,16 +56,11 @@ process_execute (const char *file_name)
   }
 
   // Get parsed file name
-  // char *save_ptr;
   file_name = strtok_r((char *) file_name, " ", &save_ptr);
 
 
-  /* Create a new thread to execute FILE_NAME. */`
-  // tid = thread_create (fname_args[0], PRI_DEFAULT, start_process, fn_copy );
+  /* Create a new thread to execute FILE_NAME. */
   tid = thread_create (file_name, PRI_DEFAULT, start_process, fn_copy);
-
-  //tid = thread_create (fname_args[0], PRI_DEFAULT +1, start_process, fn_copy );
-  // tid = thread_create (fname_args[0], PRI_DEFAULT, start_process, fn_copy );
 
   if (tid == TID_ERROR)
     palloc_free_page (fn_copy); 
@@ -148,7 +138,7 @@ process_exit (void)
   printf("%s: exit(%d)\n", cur->name, cur->status);
   
   if (thread_alive(cur->parent)) {
-    cur->cp->exit = true; // <---
+    cur->cp->exit = true;
   }
   
   /* Destroy the current process's page directory and switch back
@@ -494,7 +484,6 @@ setup_stack (void **esp)
   bool success = false;
   void *offset = PHYS_BASE;
   int plen = sizeof(void *); //word size 
-  char* fname = fname_args[0];
   int i;
   // printf("start of setup stack\n");
 

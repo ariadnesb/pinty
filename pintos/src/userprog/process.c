@@ -85,14 +85,10 @@ start_process (void *file_name_)
   char *file_name = file_name_;
   struct intr_frame if_;
   bool success;
-<<<<<<< HEAD
 
   // Get first file name
   char *save_ptr;
   file_name = strtok_r(file_name, " ", &save_ptr);
-=======
-  //printf("------------- START PROCESS \n");
->>>>>>> b3e781bfb3d92d2829595657fa0ab0792c2baf66
 
   /* Initialize interrupt frame and load executable. */
   memset (&if_, 0, sizeof if_);
@@ -132,11 +128,7 @@ process_wait (tid_t child_tid UNUSED)
   }
   return -1;
   */
-<<<<<<< HEAD
   // printf(" -------------------- WAITING \n");
-=======
-  //printf(" -------------------- WAITING \n");
->>>>>>> b3e781bfb3d92d2829595657fa0ab0792c2baf66
 
   struct child_process* cp = get_child_process(child_tid);
   if (!cp)
@@ -164,13 +156,10 @@ process_exit (void)
 {
   struct thread *cur = thread_current ();
   uint32_t *pd;
-  printf("are you here4? \n");
 
   //printf(" -------------------- PROCESS EXIT \n");
-  process_close_file(-1);
 
   printf("%s: exit(%d)\n", cur->name, cur->status);
-<<<<<<< HEAD
   process_close_file(CLOSE_ALL); // <----
 
   remove_child_processes();
@@ -181,14 +170,7 @@ process_exit (void)
     }
 
 
-=======
-  remove_child_processes();
->>>>>>> b3e781bfb3d92d2829595657fa0ab0792c2baf66
   
-  if (thread_alive(cur->parent)){
-      cur->cp->exit = true;
-    }
-
   /* Destroy the current process's page directory and switch back
      to the kernel-only page directory. */
   pd = cur->pagedir;
@@ -204,9 +186,6 @@ process_exit (void)
       cur->pagedir = NULL;
       pagedir_activate (NULL);
       pagedir_destroy (pd);
-      printf("are you here5? \n");
-
-
     }
 }
 
@@ -574,11 +553,7 @@ setup_stack (void **esp)
 
       //printf("before hex dump\n");
       //hex_dump(*esp, *esp, (int) (PHYS_BASE - *esp), true);
-<<<<<<< HEAD
       // hex_dump((uintptr_t *) *esp, (const void *) *esp, (int)(PHYS_BASE - *esp), true);
-=======
-      //hex_dump((uintptr_t *) *esp, (const void *) *esp, (int)(PHYS_BASE - *esp), true);
->>>>>>> b3e781bfb3d92d2829595657fa0ab0792c2baf66
 
       }
       else {

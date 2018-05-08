@@ -67,7 +67,7 @@ struct file *
 filesys_open (const char *name)
 {
 
-  printf("------------- filesys-open %s \n",name);
+  // printf("------------- filesys-open %s \n",name);
   struct dir *dir = dir_open_root ();
   struct inode *inode = NULL;
   if (dir != NULL)

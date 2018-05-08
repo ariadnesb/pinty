@@ -1,25 +1,14 @@
 #ifndef USERPROG_SYSCALL_H
 #define USERPROG_SYSCALL_H
-#define ERROR -1
-#define NOT_LOADED 0
-
-
-void syscall_init (void);
-
-#endif /* userprog/syscall.h */
 
 #include "threads/synch.h"
 
-struct child_process* add_child_process (int pid);
-struct child_process* get_child_process (int pid);
+#define CLOSE_ALL -1
+#define ERROR -1
 
-void process_close_file (int fd);
-
-void remove_child_process (struct child_process *cp);
-void remove_child_processes (void);
-
-int wait (int pid);
-
+#define NOT_LOADED 0
+#define LOAD_SUCCESS 1
+#define LOAD_FAIL 2
 
 struct child_process {
   int pid;
@@ -31,21 +20,13 @@ struct child_process {
   struct list_elem elem;
 };
 
-/*
+struct child_process* add_child_process (int pid);
+struct child_process* get_child_process (int pid);
+void remove_child_process (struct child_process *cp);
+void remove_child_processes (void);
 
-does this help, I dont knw? also why do they sometimes not print if anyone could explain that to me
+void process_close_file (int fd);
 
-cr2 = control register
-error = error
-esa-dsx = general purpose register
-esi = index register for ds
-edi =  "      "       "  es
-esp = stack pointer
-ebp = access data on the stack
-cs = code segment register : added to address during instruction 'fetch' apparentlu
-ds = data segment register : added to the address when accessing a memory operand that is not on the stack 
-es = extra segment register : also ised in special instructions that span segements ( cole: string cpies)
-ss = stack segement, added to address during the stack access
+void syscall_init (void);
 
-
-*/
+#endif /* userprog/syscall.h */

@@ -38,7 +38,7 @@ syscall_handler (struct intr_frame *f UNUSED)
 {
 
 	int call = *(int *) f-> esp;
-	printf("------------- system call: %d \n", call);
+	// printf("\n ------------- system call: %d \n", call);
   //printf("system call halt %d!\n", SYS_EXIT);
 
 	// hex_dump(f->esp, f-> esp, (int) (PHYS_BASE - f->esp), true);
@@ -52,24 +52,26 @@ syscall_handler (struct intr_frame *f UNUSED)
   switch(call){
     case SYS_HALT:                   /* Halt the operating system. */
     {
-      printf("-------------------------- HALT \n");
+      // // printf("-------------------------- HALT \n");
       shutdown_power_off();
     }
 
     case SYS_EXIT:                  /* Terminate this process. */
     {
-      //printf("-------------------------- EXITING \n");
+      //// printf("-------------------------- EXITING \n");
       get_arg(f, &arg[0], 1);
-      thread_current ()->status = *(int*)arg[0];
+      thread_current ()->status = *(int*)arg[0];      
       thread_exit();
+      shutdown_power_off();
+
     }
     case SYS_EXEC:
     {
-      printf("-------------------------- EXEC \n");
+      // printf("-------------------------- EXEC \n");
     }
     case SYS_WAIT:
     {
-      printf("begin on sys_wait\n");
+      // printf("begin on sys_wait\n");
       get_arg(f, &arg[0], 1);
       f->eax = wait(arg[0]);
       break;
@@ -90,11 +92,11 @@ syscall_handler (struct intr_frame *f UNUSED)
     } 
     case SYS_WRITE: 
     {
-    get_arg(f, &arg[0], 3);
-    // printf("%s\n", "We have a write");  
-    check_pointer((void * ) arg[1], *(unsigned*) arg[2]);
-    f->eax = write(*(int*)arg[0], *(char**) arg[1], *(unsigned *) arg[2]);
-    break;
+      get_arg(f, &arg[0], 3);
+    // printf("%s \n", arg[1]);  
+      check_pointer((void * ) arg[1], *(unsigned*) arg[2]);
+      f->eax = write(*(int*)arg[0], *(char**) arg[1], *(unsigned *) arg[2]);
+      break;
     }
                  /* Write to a file. */
     case SYS_SEEK:                   /* Change position in a file. */
@@ -179,7 +181,7 @@ int open (const char * file){
 
 struct child_process* add_child_process (int pid)
 {
-  printf("--------------------------------------------- added child process \n");
+  // printf("--------------------------------------------- added child process \n");
 
   struct child_process* cp = malloc(sizeof(struct child_process));
   cp->pid = pid;
@@ -205,12 +207,12 @@ struct child_process* get_child_process (int pid)
     struct child_process *cp = list_entry (e, struct child_process, elem);
     if (pid == cp->pid)
     {
-    printf("-------------------- get child process \n");
+      // printf("-------------------- get child process \n");
 
-     return cp;
-   }
- }
- return NULL;
+      return cp;
+    }
+  }
+  return NULL;
 }
 
 struct file * get_file(int fd){
@@ -238,21 +240,21 @@ void process_close_file (int fd)
   struct list_elem *next, *e = list_begin(&t->file_list);
 
   while (e != list_end (&t->file_list))
-    {
-      next = list_next(e);
-      struct process_file *pf = list_entry (e, struct process_file, elem);
-      if (fd == pf->fd || fd == -1)
   {
-    file_close(pf->file);
-    list_remove(&pf->elem);
-    free(pf);
-    if (fd != -1)
+    next = list_next(e);
+    struct process_file *pf = list_entry (e, struct process_file, elem);
+    if (fd == pf->fd || fd == -1)
+    {
+      file_close(pf->file);
+      list_remove(&pf->elem);
+      free(pf);
+      if (fd != -1)
       {
         return;
       }
-  }
-      e = next;
     }
+    e = next;
+  }
 }
 
 
@@ -272,12 +274,12 @@ void remove_child_processes (void)
   struct list_elem *next, *e = list_begin(&t->child_list);
 
   while (e != list_end (&t->child_list))
-    {
-      next = list_next(e);
-      struct child_process *cp = list_entry (e, struct child_process,
-               elem);
-      list_remove(&cp->elem);
-      free(cp);
-      e = next;
-    }
+  {
+    next = list_next(e);
+    struct child_process *cp = list_entry (e, struct child_process,
+     elem);
+    list_remove(&cp->elem);
+    free(cp);
+    e = next;
+  }
 }

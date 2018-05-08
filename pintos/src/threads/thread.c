@@ -11,9 +11,9 @@
 #include "threads/switch.h"
 #include "threads/synch.h"
 #include "threads/vaddr.h"
-#ifdef USERPROG
 #include "userprog/process.h"
-#endif
+#include "userprog/syscall.h"
+
 
 /* Random value for struct thread's `magic' member.
    Used to detect stack overflow.  See the big comment at the top
@@ -39,6 +39,9 @@ static struct thread *initial_thread;
 
 /* Lock used by allocate_tid(). */
 static struct lock tid_lock;
+
+
+static struct child_process* add_child_process2 (int pid);
 
 
 /* List of all child threads*/
@@ -219,7 +222,7 @@ thread_create (const char *name, int priority,
   
 
   t->parent = thread_tid();
-  struct child_process *cp = add_child_process(t->tid);
+  struct child_process *cp = add_child_process2(t->tid);
   t->cp = cp;
 
   /* Add to run queue. */
@@ -634,4 +637,19 @@ bool thread_alive (int pid)
   }
     }
   return false;
+}
+
+struct child_process* add_child_process2 (int pid)
+{
+  // Add child process to parent child process' list
+  struct child_process* cp = malloc(sizeof(struct child_process));
+  cp->pid = pid;
+  cp->load = NOT_LOADED;
+  cp->wait = false;
+  cp->exit = false;
+  lock_init(&cp->wait_lock);
+  // Push the lock onto the stack
+  list_push_back(&thread_current()->child_list,
+   &cp->elem);
+  return cp;
 }

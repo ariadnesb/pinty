@@ -123,31 +123,13 @@ start_process (void *file_name_)
 int
 process_wait (tid_t child_tid UNUSED) 
 {
-  /* while (1){
-
-  }
-  return -1;
-  */
-  // printf(" -------------------- WAITING \n");
-
   struct child_process* cp = get_child_process(child_tid);
-  if (!cp)
-    {
-      return ERROR;
-    }
-  if (cp->wait)
-    {
-      return ERROR;
-    }
+  if (!cp) return ERROR; 
+  if (cp->wait) return ERROR;
   cp->wait = true;
-  while (!cp->exit)
-    {
-      barrier();
-    }
+  while (!cp->exit) barrier(); 
   int status = cp->status;
-  remove_child_process(cp);
   return status;
-
 }
 
 /* Free the current process's resources. */
@@ -156,20 +138,11 @@ process_exit (void)
 {
   struct thread *cur = thread_current ();
   uint32_t *pd;
-
-  //printf(" -------------------- PROCESS EXIT \n");
-
   printf("%s: exit(%d)\n", cur->name, cur->status);
   process_close_file(CLOSE_ALL); // <----
-
-  remove_child_processes();
-
-    if (thread_alive(cur->parent))
-    {
-      cur->cp->exit = true; // <---
-    }
-
-
+  if (thread_alive(cur->parent)) {
+    cur->cp->exit = true; // <---
+  }
   
   /* Destroy the current process's page directory and switch back
      to the kernel-only page directory. */
@@ -289,23 +262,18 @@ load (const char *file_name, void (**eip) (void), void **esp, char **save_ptr)
   off_t file_ofs;
   bool success = false;
   int i;
-  // printf("start loap\n");
-
   /* Allocate and activate page directory. */
   t->pagedir = pagedir_create ();
   if (t->pagedir == NULL) 
     goto done;
   process_activate ();
-  // printf(".5;%s\n", file_name);
   /* Open executable file. */
   file = filesys_open (file_name);
   
-  if (file == NULL) 
-    {
+  if (file == NULL) {
       printf ("load: %s: open failed\n", file_name);
       goto done; 
-    }
-      
+  }
 
   /* Read and verify executable header. */
   if (file_read (file, &ehdr, sizeof ehdr) != sizeof ehdr

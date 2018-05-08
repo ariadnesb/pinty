@@ -259,7 +259,7 @@ void process_close_file (int fd)
 
 
 
-
+/*
 
 void remove_child_process (struct child_process *cp)
 {
@@ -282,4 +282,4 @@ void remove_child_processes (void)
     free(cp);
     e = next;
   }
-}
+}*/ 

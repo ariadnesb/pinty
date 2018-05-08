@@ -72,7 +72,7 @@ syscall_handler (struct intr_frame *f UNUSED)
     case SYS_WAIT:
     {
       // printf("begin on sys_wait\n");
-      get_arg(f, &arg[0], 1);
+      get_arg(f, &arg[0], 1); // Get the first argument
       f->eax = wait(arg[0]);
       break;
     }
@@ -171,6 +171,7 @@ int wait (int pid)
 }
 
 int open (const char * file){
+  // loads and opens the file, then pushes the file onto the file list
 	struct file *f =filesys_open(file);
 	struct pfile *process_file = malloc(sizeof(struct pfile));
 	process_file -> fd = thread_current()-> fd +1 ; 
@@ -181,14 +182,14 @@ int open (const char * file){
 
 struct child_process* add_child_process (int pid)
 {
-  // printf("--------------------------------------------- added child process \n");
-
+  // Add child process to parent child process' list
   struct child_process* cp = malloc(sizeof(struct child_process));
   cp->pid = pid;
   cp->load = NOT_LOADED;
   cp->wait = false;
   cp->exit = false;
   lock_init(&cp->wait_lock);
+  // Push the lock onto the stack
   list_push_back(&thread_current()->child_list,
    &cp->elem);
   return cp;
@@ -196,21 +197,18 @@ struct child_process* add_child_process (int pid)
 
 struct child_process* get_child_process (int pid)
 {
+  // Get specific child process from parent child's list
   struct thread *t = thread_current();
   struct list_elem *e;
 
-
+  // iterate through parent's child list and fetch pid
   for (e = list_begin (&t->child_list); e != list_end (&t->child_list);
    e = list_next (e))
   {
 
     struct child_process *cp = list_entry (e, struct child_process, elem);
-    if (pid == cp->pid)
-    {
-      // printf("-------------------- get child process \n");
-
-      return cp;
-    }
+    // return found child process
+    if (pid == cp->pid)return cp;
   }
   return NULL;
 }

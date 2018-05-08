@@ -123,11 +123,17 @@ start_process (void *file_name_)
 int
 process_wait (tid_t child_tid UNUSED) 
 {
+  // define new child process to represent childs exit status
   struct child_process* cp = get_child_process(child_tid);
+  // If thread does not have child process, exit
   if (!cp) return ERROR; 
+  // Process should not already be waiting for child process
   if (cp->wait) return ERROR;
+  // Process is now waiting on child
   cp->wait = true;
+  // Data could change asynchrnously without compiler's knowledge
   while (!cp->exit) barrier(); 
+  // Get status of child process
   int status = cp->status;
   return status;
 }

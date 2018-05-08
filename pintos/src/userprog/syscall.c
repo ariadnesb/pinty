@@ -37,39 +37,46 @@ static void
 syscall_handler (struct intr_frame *f UNUSED) 
 {
 
-	int call = *(int *) f-> esp;
-	printf("------------- system call: %d \n", call);
-  //printf("system call halt %d!\n", SYS_EXIT);
+	int call = *(int *) f-> esp; //make a copy of the stack pointer
+	//printf("------------- system call: %d \n", call);
+  	//printf("system call halt %d!\n", SYS_EXIT);
 
 	// hex_dump(f->esp, f-> esp, (int) (PHYS_BASE - f->esp), true);
 	
-  		//make a copy of the stack pointer
 
 
-  void* arg[5];
+
+  void* arg[5]; //syscall arguments array
   
 
   switch(call){
     case SYS_HALT:                   /* Halt the operating system. */
     {
-      printf("-------------------------- HALT \n");
+      //printf("-------------------------- HALT \n");
       shutdown_power_off();
+      break;
     }
 
     case SYS_EXIT:                  /* Terminate this process. */
     {
       //printf("-------------------------- EXITING \n");
+      printf("are you here1? \n");
+
       get_arg(f, &arg[0], 1);
       thread_current ()->status = *(int*)arg[0];
+      printf("are you here2? \n");
       thread_exit();
+      printf("are you here? \n");
+      shutdown_power_off();
+      break;
     }
     case SYS_EXEC:
     {
-      printf("-------------------------- EXEC \n");
+      //printf("-------------------------- EXEC \n");
     }
     case SYS_WAIT:
     {
-      printf("begin on sys_wait\n");
+      //printf("begin on sys_wait\n");
       get_arg(f, &arg[0], 1);
       f->eax = wait(arg[0]);
       break;
@@ -176,10 +183,10 @@ int open (const char * file){
 	list_push_back(&thread_current()-> file_list, &process_file->pfelem);
 	return (&process_file->pfelem);
 }
-
+/*
 struct child_process* add_child_process (int pid)
 {
-  printf("--------------------------------------------- added child process \n");
+  //printf("--------------------------------------------- added child process \n");
 
   struct child_process* cp = malloc(sizeof(struct child_process));
   cp->pid = pid;
@@ -191,6 +198,7 @@ struct child_process* add_child_process (int pid)
    &cp->elem);
   return cp;
 }
+*/
 
 struct child_process* get_child_process (int pid)
 {
@@ -205,7 +213,7 @@ struct child_process* get_child_process (int pid)
     struct child_process *cp = list_entry (e, struct child_process, elem);
     if (pid == cp->pid)
     {
-    printf("-------------------- get child process \n");
+    //printf("-------------------- get child process \n");
 
      return cp;
    }

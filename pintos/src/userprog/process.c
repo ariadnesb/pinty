@@ -79,7 +79,7 @@ start_process (void *file_name_)
   char *file_name = file_name_;
   struct intr_frame if_;
   bool success;
-  printf("------------- START PROCESS \n");
+  //printf("------------- START PROCESS \n");
 
   /* Initialize interrupt frame and load executable. */
   memset (&if_, 0, sizeof if_);
@@ -119,7 +119,7 @@ process_wait (tid_t child_tid UNUSED)
   }
   return -1;
   */
-  printf(" -------------------- WAITING \n");
+  //printf(" -------------------- WAITING \n");
 
   struct child_process* cp = get_child_process(child_tid);
   if (!cp)
@@ -147,12 +147,18 @@ process_exit (void)
 {
   struct thread *cur = thread_current ();
   uint32_t *pd;
+  printf("are you here4? \n");
 
   //printf(" -------------------- PROCESS EXIT \n");
+  process_close_file(-1);
 
   printf("%s: exit(%d)\n", cur->name, cur->status);
-
+  remove_child_processes();
   
+  if (thread_alive(cur->parent)){
+      cur->cp->exit = true;
+    }
+
   /* Destroy the current process's page directory and switch back
      to the kernel-only page directory. */
   pd = cur->pagedir;
@@ -168,6 +174,9 @@ process_exit (void)
       cur->pagedir = NULL;
       pagedir_activate (NULL);
       pagedir_destroy (pd);
+      printf("are you here5? \n");
+
+
     }
 }
 
@@ -533,7 +542,7 @@ setup_stack (void **esp)
 
       //printf("before hex dump\n");
       //hex_dump(*esp, *esp, (int) (PHYS_BASE - *esp), true);
-      hex_dump((uintptr_t *) *esp, (const void *) *esp, (int)(PHYS_BASE - *esp), true);
+      //hex_dump((uintptr_t *) *esp, (const void *) *esp, (int)(PHYS_BASE - *esp), true);
 
       }
       else {

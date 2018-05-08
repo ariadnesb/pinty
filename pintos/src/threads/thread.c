@@ -12,6 +12,7 @@
 #include "threads/synch.h"
 #include "threads/vaddr.h"
 #ifdef USERPROG
+#include "userprog/syscall.h"
 #include "userprog/process.h"
 #endif
 
@@ -19,7 +20,7 @@
    Used to detect stack overflow.  See the big comment at the top
    of thread.h for details. */
 #define THREAD_MAGIC 0xcd6abf4b
-
+#define MIN_FD 2
 /* List of processes in THREAD_READY state, that is, processes
    that are ready to run but not actually running. */
 static struct list ready_list;
@@ -294,7 +295,10 @@ thread_exit (void)
 {
   ASSERT (!intr_context ());
   #ifdef USERPROG
+    printf("are you here3? \n");
     process_exit ();
+    printf("are you here6?d\n");
+
   #endif
   /* Remove thread from all threads list, set our status to dying,
      and schedule another process.  That process will destroy us
@@ -481,7 +485,7 @@ init_thread (struct thread *t, const char *name, int priority)
   intr_set_level (old_level);
 
   list_init(&t->file_list);
-  //t->fd = MIN_FD;
+  t->fd = MIN_FD;
 
   list_init(&t->child_list);
   //t->cp = NULL;
@@ -619,4 +623,18 @@ bool thread_alive (int pid)
   }
     }
   return false;
+}
+struct child_process* add_child_process (int pid)
+{
+  //printf("--------------------------------------------- added child process \n");
+
+  struct child_process* cp = malloc(sizeof(struct child_process));
+  cp->pid = pid;
+  cp->load = NOT_LOADED;
+  cp->wait = false;
+  cp->exit = false;
+  lock_init(&cp->wait_lock);
+  list_push_back(&thread_current()->child_list,
+   &cp->elem);
+  return cp;
 }

@@ -20,7 +20,7 @@ void remove_child_processes (void);
 
 int wait (int pid);
 
-
+/*
 struct child_process {
   int pid;
   int load;
@@ -31,7 +31,7 @@ struct child_process {
   struct list_elem elem;
 };
 
-/*
+
 
 does this help, I dont knw? also why do they sometimes not print if anyone could explain that to me
 

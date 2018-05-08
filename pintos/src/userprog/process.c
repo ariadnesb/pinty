@@ -145,7 +145,6 @@ process_exit (void)
   struct thread *cur = thread_current ();
   uint32_t *pd;
   printf("%s: exit(%d)\n", cur->name, cur->status);
-  process_close_file(CLOSE_ALL); // <----
   if (thread_alive(cur->parent)) {
     cur->cp->exit = true; // <---
   }

@@ -291,6 +291,7 @@ thread_current (void)
      of stack, so a few big automatic arrays or moderate
      recursion can cause stack overflow. */
   ASSERT (is_thread (t));
+
   //ASSERT (t->status == THREAD_RUNNING);
 
   return t;
@@ -502,8 +503,6 @@ init_thread (struct thread *t, const char *name, int priority)
   //t->fd = MIN_FD;
 
   list_init(&t->child_list);
-  //t->cp = NULL;
-  //t->parent = NO_PARENT;
 
 }
 

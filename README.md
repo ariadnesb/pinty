@@ -1,7 +1,7 @@
 # CMSC326-Pintos
 Design Document for Project #2: System Calls and User Programs
 
----- GROUP ----
+## Group
 
 Will Burghard <wb5289@bard.edu>
 
@@ -9,15 +9,15 @@ Jason Chang <jc8745@bard.edu>
 
 Ariadne Sinnis-Bourozakis<as8594@bard.edu>
 
----- PRELIMINARIES ----
+## PRELIMINARIES
 
 Section 1: Argument Passing
 
----- DATA STRUCTURES ----
+### DATA STRUCTURES 
 
 -For the argument passing section, we didn’t create any new structs, typedefs, or enumerations.
 
----- ALGORITHMS ----
+### ALGORITHMS 
 
 Q1. 
 
@@ -30,9 +30,9 @@ The arguments are written onto the stack using memcpy(), starting with the last 
 The stack pointer is then adjusted to reach the word boundary of 4 bytes so as to prepare for the allocation of pointers to the arguments on the stack. Then pointers to each of the arguments on the stack are allocated, ending with a pointer to the program name.
 Q2. The advantage of using the shell rather than the kernel to parse commands is that the shell is able to do more sophisticated pre-processing, acting as an interpreter rather than a simple messenger. For example, the shell can check whether or not the executable is really there before passing it to the kernel so as to avoid a kernel failure.
 
-Section 2: System Calls
+## Section 2: System Calls
 
----- DATA STRUCTURES ----
+### DATA STRUCTURES 
 
 (In userprog/syscall.c):#define virt_bottom ((int *) 0x0804ba68)
 Used in check_pointer to represent the bottom of user space in memory.
@@ -55,7 +55,7 @@ Contains information about a child process as used in process_wait(). This infor
 
 Q3. File descriptors, at least in Unix-like systems, are unique to each process. When a process opens a file, it designates its own file descriptor for that file and records it in a process-unique file table.
 
----- ALGORITHMS ----
+### ALGORITHMS 
 
 Q4. We use separate functions for checking individual pointers and checking full buffers in memory, the latter function calling the former. The pointer function is fairly simple:
 void check_pointer (const void *vadd){
@@ -78,13 +78,13 @@ Q5. How does the implementation of your wait system call work?  How does it inte
 
 The wait system call is implemented in the function process_wait. A child_process struct is used to represent the child’s status, and the parent contains a list of all children the parent has. The child process is initialized onto the parent’s child_list for management. Before the thread waits, the parent thread first checks to make sure it is not already waiting for a child process, and that there exists child process.
 
----- SYNCHRONIZATION ----
+### SYNCHRONIZATION 
 
 Q6. The exec system call returns -1 if loading the new executable
 fails, so it cannot return before the new executable has completed loading.  How does your code ensure this?  How is the load success/failure status passed back to the thread that calls exec?
 We never implemented exec, so this isn’t present in our code. If we were to do this I think the proper way is to hold a variable in the parent process which indicates the status of the child’s load, so that the load status is known regardless of whether or not the child has succeeded or failed.
 
- Q7. Consider parent process P with child process C.  How do you  ensure proper synchronization and avoid race conditions when P calls wait(C) before C exits?  After C exits?  How do you ensure that all resources are freed in each case?  How about when P terminates without waiting, before C exits?  After C exits?
+Q7. Consider parent process P with child process C.  How do you  ensure proper synchronization and avoid race conditions when P calls wait(C) before C exits?  After C exits?  How do you ensure that all resources are freed in each case?  How about when P terminates without waiting, before C exits?  After C exits?
 
 By using a child structure, we are able to represent each child process’ status. The list of child structures are used by the parent to prevent race conditions. Each child is responsible for updating its own status.
 When P calls wait(C) before C exits, P checks first that the child process exists. 

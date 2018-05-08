@@ -8,4 +8,13 @@ int process_wait (tid_t);
 void process_exit (void);
 void process_activate (void);
 
+#define ERROR -1
+
+struct pfile {
+	struct file *file; 
+	int fd;
+	struct list_elem pfelem;
+};
+
+
 #endif /* userprog/process.h */

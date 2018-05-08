@@ -29,3 +29,5 @@ GDBMACROS="/home/YOURID/cmsc326/pintos/src/misc/gdb-macros"
   "pintos run alarm-multiple"
 
 Pintos should run and load several threads in a QEMU terminal.
+
+Ariadne was here

@@ -27,7 +27,7 @@ int wait (int pid);
 int open (const char * file);
 struct child_process* add_child_process (int pid);
 struct child_process* get_child_process (int pid);
-
+struct file* get_file (int fd);
 
 
 
@@ -63,6 +63,7 @@ syscall_handler (struct intr_frame *f UNUSED)
     {
       // // printf("-------------------------- HALT \n");
       shutdown_power_off();
+      break;
     }
 
     case SYS_EXIT:                  /* Terminate this process. */
@@ -77,6 +78,7 @@ syscall_handler (struct intr_frame *f UNUSED)
     case SYS_EXEC:
     {
       // printf("-------------------------- EXEC \n");
+      break;
     }
 
     case SYS_WAIT:
@@ -95,9 +97,18 @@ syscall_handler (struct intr_frame *f UNUSED)
       bool success = create(*(char**) (f->esp+4), *(int*) (f->esp +8));
       f->eax = success;
       return success;
+      break;
     }
 
     case SYS_REMOVE:                 /* Delete a file. */
+    {
+      get_command_args(f, &arg[0], 1);
+      arg[0] = user_to_kernel_pointer((const void *) arg[0]);
+      bool success = filesys_remove((const char *) arg[0]);
+      f->eax = success;
+      break;
+    }
+
     case SYS_OPEN:                   /* Open a file. */
     {
     	get_command_args(f, &arg[0], 1);
@@ -109,7 +120,16 @@ syscall_handler (struct intr_frame *f UNUSED)
     }
 
     case SYS_FILESIZE:               /* Obtain a file's size. */
+    {
+      get_command_args(f, &arg[0], 1);
+      f->eax = get_file_length(*(int *) arg[0]);
+      break;
+    }
+
     case SYS_READ:                   /* Read from a file. */
+    return -1;
+    break;
+
     case SYS_WRITE:                  /* Write to a file. */
     {
       get_command_args(f, &arg[0], 3);
@@ -123,7 +143,7 @@ syscall_handler (struct intr_frame *f UNUSED)
                  
     case SYS_SEEK:                   /* Change position in a file. */
     { 
-      //honestly, this doesn't seem to do anything worthwile but its here
+      //honestly, this doesn't seem to do anything worthwile but I spent time on it so it's here
       get_command_args(f, &arg[0], 2);
       struct file *file = get_file(arg[0]);
       if (!file){
@@ -134,8 +154,11 @@ syscall_handler (struct intr_frame *f UNUSED)
     }
 
     case SYS_TELL:                   /* Report current position in a file. */
-    case SYS_CLOSE:                  /* Close a file. */
+    break;
 
+    case SYS_CLOSE:                  /* Close a file. */
+    return -1;
+    break;
     /* Project 3 and optionally project 4. */
     case SYS_MMAP:                   /* Map a file into memory. */
     case SYS_MUNMAP:                 /* Remove a memory mapping. */
@@ -171,7 +194,7 @@ int check_valid_buffer (void* buffer, unsigned size){
 	unsigned i;
 	char* local_buffer = (char *) buffer; 
 	for (i = 0 ; i<size; i++){
-		if (!user_to_kernel_pointer((const void *) local_buffer)){ //just changed
+		if (!user_to_kernel_pointer((const void *) local_buffer)){ 
       return -1;
     }
     else{
@@ -182,7 +205,7 @@ int check_valid_buffer (void* buffer, unsigned size){
 }
 
 int user_to_kernel_pointer (const void * vadd){
-	check_pointer(vadd);
+	if (!check_pointer(vadd)) return -1;
 	void *pointer = pagedir_get_page(thread_current()->pagedir, vadd);
 	if (!pointer){
 		return -1;
@@ -226,12 +249,21 @@ int open (const char * file){
 	struct file *f =filesys_open(file);
   if (!f) return -1;
   if (f == NULL) return -1;
+  check_pointer(f);
 	struct pfile *process_file = malloc(sizeof(struct pfile));
 	process_file -> fd = thread_current()-> fd +=1 ; 
 	process_file -> file = f;
 	list_push_back(&thread_current()-> file_list, &process_file->pfelem);
 	return (process_file->fd);
 }
+
+int get_file_length(file)
+{
+	struct file *f = get_file(file);
+    if (!f) return -1;
+    int size =file_length(f);
+    return size;
+  }
 
 struct child_process* add_child_process (int pid)
 {
@@ -266,9 +298,16 @@ struct child_process* get_child_process (int pid)
   return NULL;
 }
 
-struct file * get_file(int fd){
-	struct inode* current_inode = inode_open(fd);
-	return(file_open(current_inode));
+//get file with specific fd from the file_list
+struct file* get_file (int fd)
+{
+  struct thread *t = thread_current();
+  struct list_elem *e;
+  //iterate through and find the file with fd
+  for (e = list_begin (&t->file_list); e != list_end (&t->file_list);
+       e = list_next (e)){
+          struct process_file *pf = list_entry(e, struct process_file, elem);
+          if (fd == pf->fd) return pf->file;
+        }
+  return NULL;
 }
-
-

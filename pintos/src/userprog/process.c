@@ -145,6 +145,7 @@ process_exit (void)
   struct thread *cur = thread_current ();
   uint32_t *pd;
   printf("%s: exit(%d)\n", cur->name, cur->status);
+  
   if (thread_alive(cur->parent)) {
     cur->cp->exit = true; // <---
   }
@@ -165,6 +166,12 @@ process_exit (void)
       pagedir_activate (NULL);
       pagedir_destroy (pd);
     }
+    /*
+    for (e = list_begin (&cur->file_list); e != list_end (&cur->file_list);
+       e = list_next (e)){
+          struct process_file *pf = list_entry(e, struct process_file, elem);
+          file_close(pf);
+        } */
 }
 
 /* Sets up the CPU for running user code in the current

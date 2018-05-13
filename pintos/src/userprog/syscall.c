@@ -127,9 +127,10 @@ syscall_handler (struct intr_frame *f UNUSED)
     }
 
     case SYS_READ:                   /* Read from a file. */
-    return -1;
-    break;
-      
+    {
+      return -1;
+      break;
+    }
     case SYS_WRITE:                  /* Write to a file. */
     {
       get_command_args(f, &arg[0], 3);
@@ -170,11 +171,14 @@ syscall_handler (struct intr_frame *f UNUSED)
     	printf("\n");  END OF MASTER */
       
     case SYS_TELL:                   /* Report current position in a file. */
-    break;
+      break;
 
     case SYS_CLOSE:                  /* Close a file. */
-    return -1;
-    break;
+    {
+      return -1; //this is simply funny
+      break;
+    }
+
     /* Project 3 and optionally project 4. */
     case SYS_MMAP:                   /* Map a file into memory. */
     case SYS_MUNMAP:                 /* Remove a memory mapping. */
@@ -277,11 +281,9 @@ master*/
 
 int open (const char * file){
   // loads and opens the file, then pushes the file onto the file list
-  if (!file ) return -1;
-  if (file == NULL) return -1;
+  if (!file || file == NULL ) return -1;
 	struct file *f =filesys_open(file);
-  if (!f) return -1;
-  if (f == NULL) return -1;
+  if (!f || f == NULL) return -1;
   check_pointer(f);
 	struct pfile *process_file = malloc(sizeof(struct pfile));
 	process_file -> fd = thread_current()-> fd +=1 ; 
@@ -343,4 +345,28 @@ struct file* get_file (int fd)
           if (fd == pf->fd) return pf->file;
         }
   return NULL;
+}
+
+
+void process_close_file (int fd)
+{
+  struct thread *t = thread_current();
+  struct list_elem *next, *e = list_begin(&t->file_list);
+
+  while (e != list_end (&t->file_list))
+  {
+    next = list_next(e);
+    struct process_file *pf = list_entry (e, struct process_file, elem);
+    if (fd == pf->fd || fd == -1)
+    {
+      file_close(pf->file);
+      list_remove(&pf->elem);
+      free(pf);
+      if (fd != -1)
+      {
+        return;
+      }
+    }
+    e = next;
+  }
 }

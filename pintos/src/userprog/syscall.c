@@ -131,7 +131,6 @@ syscall_handler (struct intr_frame *f UNUSED)
       return -1;
       break;
     }
-
     case SYS_WRITE:                  /* Write to a file. */
     {
       get_command_args(f, &arg[0], 3);
@@ -154,7 +153,23 @@ syscall_handler (struct intr_frame *f UNUSED)
       file_seek(file, (unsigned) arg[1]);
       break;
     }
-
+      /* MASTER BRANCH
+    	case SYS_EXEC:                  
+    	case SYS_WAIT:                  
+   		case SYS_CREATE:                
+    	case SYS_REMOVE:        
+    	case SYS_OPEN:               
+    	case SYS_FILESIZE:        
+    	case SYS_READ:               
+    	case SYS_WRITE:
+    	printf("%s\n", "We have a write");  
+    	int fd = *((int*)f->esp + 1);
+    	void* buffer = (void *)*((int*)f->esp + 2);
+    	unsigned size = *((unsigned*)f->esp + 3);
+    	//printf("%d\n", size);
+    	f->eax = write(fd, buffer, size);
+    	printf("\n");  END OF MASTER */
+      
     case SYS_TELL:                   /* Report current position in a file. */
       break;
 
@@ -222,6 +237,7 @@ void exit (int status){
   thread_exit();
 }
 
+// <<<<<<< jason-implementation-5-8
 //this does not actually seem to work
 int wait (int pid)
 {
@@ -245,6 +261,22 @@ int write(int fd, void* buffer, unsigned size){
 
 bool create (const *fname, unsigned size){
   return filesys_create(fname, size);
+/*
+
+}
+
+int write(int fd, void* buffer, unsigned size){
+	if(fd == 1){
+    		putbuf(buffer, size);
+    	}
+    else{
+
+    }
+
+bool check_ptr(void* ptr){
+	
+}
+master*/
 }
 
 int open (const char * file){
